@@ -12,12 +12,12 @@ from os import path, listdir, system
 class MultiBootStartup(ConfigListScreen, Screen):
 
 	skin = """
-	<screen name="MultiBootStartup" position="center,center" size="500,200"  flags="wfNoBorder" title="MultiBoot STARTUP Selector" backgroundColor="transparent">
+	<screen name="MultiBootStartup" position="center,center" size="500,200"  flags="wfNoBorder" title="ReBootGB" backgroundColor="transparent">
 		<eLabel name="b" position="0,0" size="500,200" backgroundColor="#00ffffff" zPosition="-2" />
 		<eLabel name="a" position="1,1" size="498,198" backgroundColor="#00000000" zPosition="-1" />
-		<widget source="Title" render="Label" position="10,10" foregroundColor="#00ffffff" size="480,50" halign="center" font="Regular; 35" backgroundColor="#00000000" />
+		<widget source="Title" render="Label" position="10,10" foregroundColor="#00ffffff" size="480,50" halign="center" font="Regular; 28" backgroundColor="#00000000" />
 		<eLabel name="line" position="1,69" size="498,1" backgroundColor="#00ffffff" zPosition="1" />
-		<widget source="config" render="Label" position="10,90" size="480,60" halign="center" font="Regular; 30" backgroundColor="#00000000" foregroundColor="#00ffffff" />
+		<widget source="config" render="Label" position="10,90" size="480,60" halign="center" font="Regular; 24" backgroundColor="#00000000" foregroundColor="#00ffffff" />
 		<widget source="key_red" render="Label" position="35,162" size="170,30" noWrap="1" zPosition="1" valign="center" font="Regular; 20" halign="left" backgroundColor="#00000000" foregroundColor="#00ffffff" />
 		<widget source="key_green" render="Label" position="228,162" size="170,30" noWrap="1" zPosition="1" valign="center" font="Regular; 20" halign="left" backgroundColor="#00000000" foregroundColor="#00ffffff" />
 		<eLabel position="25,159" size="6,40" backgroundColor="#00e61700" />
@@ -25,14 +25,18 @@ class MultiBootStartup(ConfigListScreen, Screen):
 	</screen>
 	"""
 
-	def __init__(self, session):
+	def __init__(self, session, *args):
 		Screen.__init__(self, session)
 		self["key_red"] = StaticText(_("Cancel"))
 		self["key_green"] = StaticText(_("Save"))
 		self["config"] = StaticText(_("Select Image: STARTUP_1"))
-		self.multiold = self.read_startup("/media/mmc/STARTUP").split(".",1)[1].split(":",1)[0]
-		self.multiold = self.multiold[-1:]
-		self.title = _("Current: boot/STARTUP_") + self.multiold
+		self.mulitold = 0
+		if path.exists('/media/mmc/STARTUP'):
+			f = open('/media/mmc/STARTUP', 'r')
+			f.seek(22)
+			self.multiold = f.read(1) 
+			f.close()
+		self.title = " " 
 		self.selection = 0
 		self.list = self.list_files("/media/mmc")
 
@@ -58,10 +62,9 @@ class MultiBootStartup(ConfigListScreen, Screen):
 		return SimpleSummary
 
 	def startup(self):
-		self["config"].setText(_("Select Image: %s") %self.list[self.selection])
+		self["config"].setText(_("(Old)STARTUP_%s -> %s(New) ") %(self.multiold, self.list[self.selection]))
 
 	def save(self):
-		print "[MultiBootStartup] select new startup: ", self.list[self.selection]
 		system("cp -f /media/mmc/%s /media/mmc/STARTUP"%self.list[self.selection])
 		restartbox = self.session.openWithCallback(self.restartBOX,MessageBox,_("Do you want to reboot now with selected image?"), MessageBox.TYPE_YESNO)
 
@@ -92,9 +95,10 @@ class MultiBootStartup(ConfigListScreen, Screen):
 		self.path = PATH
 		for name in listdir(self.path):
 			if path.isfile(path.join(self.path, name)):
-				cmdline = self.read_startup("/media/mmc/" + name).split("=",1)[1].split(" ",1)[0]
-				if cmdline in Harddisk.getextdevices("ext4") and not name == "STARTUP":
+#				cmdline = self.read_startup("/media/mmc/" + name).split("=",1)[1].split(" ",1)[0]
+				if not name == "STARTUP":
 					files.append(name)
+
 		return files
 
 	def restartBOX(self, answer):
