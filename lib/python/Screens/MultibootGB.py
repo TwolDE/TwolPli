@@ -7,6 +7,8 @@ from Components.ActionMap import ActionMap
 from Components.ConfigList import ConfigListScreen
 from Components.Label import Label
 from Components import Harddisk
+from Components.SystemInfo import SystemInfo
+from Tools.Multiboot import GetImagelist
 from os import path, listdir, system
 
 class MultiBootStartup(ConfigListScreen, Screen):
@@ -37,10 +39,10 @@ class MultiBootStartup(ConfigListScreen, Screen):
 			self.multiold = f.read(1) 
 			f.close()
 		self.title = " " 
+		self.getImageList = None
 		self.selection = 0
 		self.list = self.list_files("/media/mmc")
-
-		self.startup()
+		self.startit()
 
 		self["actions"] = ActionMap(["WizardActions", "SetupActions", "ColorActions"],
 		{
@@ -61,12 +63,18 @@ class MultiBootStartup(ConfigListScreen, Screen):
 		from Screens.SimpleSummary import SimpleSummary
 		return SimpleSummary
 
-	def startup(self):
-		self["config"].setText(_("(Old)STARTUP_%s -> %s(New) ") %(self.multiold, self.list[self.selection]))
+	def startit(self):
+		self.getImageList = GetImagelist(self.startup)
+
+	def startup(self, imagedict):
+		x = self.selection + 1
+#		print "Multiboot OldImage %s NewFlash %s FlashType %s" % (self.multiold, self.selection, x)
+		self["config"].setText(_("Current Image: STARTUP_%s \n Reboot STARTUP_%s: %s\n Use cursor keys < > to change Image\n Press (Green)Save button to reboot selected Image.") %(self.multiold, x, imagedict[x]['imagename']))
+
 
 	def save(self):
 		system("cp -f /media/mmc/%s /media/mmc/STARTUP"%self.list[self.selection])
-		restartbox = self.session.openWithCallback(self.restartBOX,MessageBox,_("Do you want to reboot now with selected image?"), MessageBox.TYPE_YESNO)
+		restartbox = self.session.openWithCallback(self.restartBOX,MessageBox,_("Image %s chosen for reboot now(Yes) or later manual restart(No)"%self.list[self.selection]), MessageBox.TYPE_YESNO)
 
 	def cancel(self):
 		self.close()
@@ -75,13 +83,13 @@ class MultiBootStartup(ConfigListScreen, Screen):
 		self.selection = self.selection - 1
 		if self.selection == -1:
 			self.selection = len(self.list) - 1
-		self.startup()
+		self.startit()
 
 	def right(self):
 		self.selection = self.selection + 1
 		if self.selection == len(self.list):
 			self.selection = 0
-		self.startup()
+		self.startit()
 
 	def read_startup(self, FILE):
 		self.file = FILE
@@ -98,7 +106,6 @@ class MultiBootStartup(ConfigListScreen, Screen):
 #				cmdline = self.read_startup("/media/mmc/" + name).split("=",1)[1].split(" ",1)[0]
 				if not name == "STARTUP":
 					files.append(name)
-
 		return files
 
 	def restartBOX(self, answer):
