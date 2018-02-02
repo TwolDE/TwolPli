@@ -19,7 +19,7 @@ class GetImagelist():
 	UNMOUNT = 1
 
 	def __init__(self, callback):
-		if SystemInfo["HaveMultiBoot"]:
+		if SystemInfo["canMultiBoot"]:
 			if SystemInfo["canMultiBootHD"]:
 				self.addin = 1
 				self.endslot = 4

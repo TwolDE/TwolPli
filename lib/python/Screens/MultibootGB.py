@@ -59,10 +59,6 @@ class MultiBootStartup(ConfigListScreen, Screen):
 	def layoutFinished(self):
 		self.setTitle(self.title)
 
-	def createSummary(self):
-		from Screens.SimpleSummary import SimpleSummary
-		return SimpleSummary
-
 	def startit(self):
 		self.getImageList = GetImagelist(self.startup)
 
@@ -103,7 +99,6 @@ class MultiBootStartup(ConfigListScreen, Screen):
 		self.path = PATH
 		for name in listdir(self.path):
 			if path.isfile(path.join(self.path, name)):
-#				cmdline = self.read_startup("/media/mmc/" + name).split("=",1)[1].split(" ",1)[0]
 				if not name == "STARTUP":
 					files.append(name)
 		return files
