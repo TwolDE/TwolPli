@@ -342,7 +342,7 @@ class ImageBackup(Screen):
 		if HaveGZkernel:
 			cmdlist.append('echo "Check: kerneldump"')
 		cmdlist.append("sync")
-		if ( SystemInfo["canMultiBootHD"] and self.list[self.selection] == "Recovery":
+		if ( SystemInfo["canMultiBoot"] and self.list[self.selection] == "Recovery":
 			BLOCK_SIZE=512
 			BLOCK_SECTOR=2
 			IMAGE_ROOTFS_ALIGNMENT=1024
@@ -486,7 +486,7 @@ class ImageBackup(Screen):
 			print '[ImageBackup] NOFORCE bin file not found'
 			file_found = False
 
-		if SystemInfo["canMultiBoot"] and not self.list[self.selection] == "Recovery":
+		if SystemInfo["canMultiBoot"] and self.list[self.selection] != "Recovery":
 			cmdlist.append('echo "_________________________________________________\n"')
 			cmdlist.append('echo "Multiboot Image created on:" %s' %self.MAINDEST)
 			cmdlist.append('echo "and there is made an extra copy on:"')

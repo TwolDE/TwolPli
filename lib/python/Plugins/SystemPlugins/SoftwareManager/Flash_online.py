@@ -22,22 +22,28 @@ import urllib2
 import os
 import shutil
 import math
-from boxbranding import getBoxType,  getImageDistro, getMachineName, getMachineBrand, getImageVersion, getMachineKernelFile, getMachineRootFile, getMachineMake, getMachineBuild
-distro =  getImageDistro()
-ImageVersion = getImageVersion()
-ROOTFSBIN = getMachineRootFile()
-KERNELBIN = getMachineKernelFile()
+from Tools.HardwareInfo import HardwareInfo
+# from boxbranding import getBoxType,  getImageDistro, getMachineName, getMachineBrand, getImageVersion, getMachineKernelFile, getMachineRootFile, getMachineMake, getMachineBuild
 
 #############################################################################################################
 #
 #        Thanks to OpenATV Team for supplyng most of this code
 #
-feedurl_ViX = 'http://192.168.0.26/openvix-builds' 
-imagePath = '/media/hdd/images'
-flashPath = '/media/hdd/images/flash'
-flashTmp = '/media/hdd/images/tmp'
+feedurl_ViX = 'http://192.168.0.171/openvix-builds' 
+imagePathGB = '/media/hdd/images'
+flashPathGB = '/media/hdd/images/flash'
+flashTmpGB = '/media/hdd/images/tmp'
+imagePath = '/media/HD51HDD/images'
+flashPath = '/media/HD51HDD/images/flash'
+flashTmp = '/media/HD51HDD/images/tmp'
 ofgwritePath = '/usr/bin/ofgwrite'
 #############################################################################################################
+
+#		#default layout for Mut@nt HD51	& Giga4K								for GigaBlue 4K
+# STARTUP_1 			Image 1: boot emmcflash0.kernel1 'root=/dev/mmcblk0p3 rw rootwait'	boot emmcflash0.kernel1: 'root=/dev/mmcblk0p5 
+# STARTUP_2 			Image 2: boot emmcflash0.kernel2 'root=/dev/mmcblk0p5 rw rootwait'      boot emmcflash0.kernel2: 'root=/dev/mmcblk0p7
+# STARTUP_3		        Image 3: boot emmcflash0.kernel3 'root=/dev/mmcblk0p7 rw rootwait'	boot emmcflash0.kernel3: 'root=/dev/mmcblk0p9
+# STARTUP_4		        Image 4: boot emmcflash0.kernel4 'root=/dev/mmcblk0p9 rw rootwait'	NOT IN USE due to Rescue mode in mmcblk0p3
 
 def Freespace(dev):
 	statdev = os.statvfs(dev)
@@ -64,20 +70,16 @@ class FlashOnline(Screen):
 		Screen.__init__(self, session)
 		self.session = session
 		self.selection = 0
-		if getMachineBuild() in ("hd51","vs1500","h7","8100s"):
-			self.devrootfs = "/dev/mmcblk0p3"
-		elif getMachineBuild() in ("gb7252"):
-			self.devrootfs = "/dev/mmcblk0p4"
-		else:
-			self.devrootfs = "/dev/mmcblk1p3"
 		self.multi = 1
-		self.list = self.list_files("/media/mmc")
+		if SystemInfo["canMultiBootHD"]:
+			self.devrootfs = "/dev/mmcblk0p3"
+			self.list = self.list_files("/media/mmcblk0p1")
+		if SystemInfo["canMultiBootGB"]:
+			self.devrootfs = "/dev/mmcblk0p4"
+			self.list = self.list_files("/media/mmc")
 
 		Screen.setTitle(self, _("Flash On the Fly"))
-		if SystemInfo["HaveMultimedia/mmc"]:
-			self["key_yellow"] = StaticText(_("STARTUP"))
-		else:
-			self["key_yellow"] = StaticText("")
+		self["key_yellow"] = StaticText(_("STARTUP"))
 		self["key_green"] = StaticText(_("Online"))
 		self["key_red"] = StaticText(_("Exit"))
 		self["key_blue"] = StaticText(_("Local"))
@@ -92,42 +94,74 @@ class FlashOnline(Screen):
 			"red": self.quit,
 			"cancel": self.quit,
 		}, -2)
-		if SystemInfo["HaveMultimedia/mmc"]:
-			if getMachineBuild() in ("gb7252"):
-				self.multi = self.read_startup("/media/mmc/" + self.list[self.selection]).split(".",1)[1].split(":",1)[0]
-				self.multi = self.multi[-1:]
-			else:
-				self.multi = self.read_startup("/media/mmc/" + self.list[self.selection]).split(".",1)[1].split(" ",1)[0]
-				self.multi = self.multi[-1:]
-			print "[Flash Online] MULTI:",self.multi
+		if SystemInfo["canMultiBootGB"]:
+			self.hdd = "/media/hdd"
+			self.multi = self.read_startup("/media/mmc/" + self.list[self.selection]).split(".",1)[1].split(":",1)[0]
+			self.multi = self.multi[-1:]
+		if SystemInfo["canMultiBootHD"]:
+			self.hdd = "/media/HD51HDD"
+			self.multi = self.read_startup("/media/mmcblk0p1/" + self.list[self.selection]).split(".",1)[1].split(" ",1)[0]
+			self.multi = self.multi[-1:]
+#		imagePath = "%s + %s" %(self.hdd, images)
+#		flashPath = "%s + %s" %(imagePath, flash)
+#		flashTmp = "%s + %s" %(imagePath, tmp)
+		print "[Flash Online] MULTI:",self.multi
 
 	def check_hdd(self):
-		if not os.path.exists("/media/hdd"):
-			self.session.open(MessageBox, _("No /hdd found !!\nPlease make sure you have a HDD mounted.\n\nExit plugin."), type = MessageBox.TYPE_ERROR)
-			return False
-		if Freespace('/media/hdd') < 300000:
-			self.session.open(MessageBox, _("Not enough free space on /hdd !!\nYou need at least 300Mb free space.\n\nExit plugin."), type = MessageBox.TYPE_ERROR)
-			return False
 		if not os.path.exists(ofgwritePath):
 			self.session.open(MessageBox, _('ofgwrite not found !!\nPlease make sure you have ofgwrite installed in /usr/bin/ofgwrite.\n\nExit plugin.'), type = MessageBox.TYPE_ERROR)
 			return False
+		if not os.path.exists(self.hdd):
+			self.session.open(MessageBox, _("No /hdd found !!\nPlease make sure you have a HDD mounted.\n\nExit plugin."), type = MessageBox.TYPE_ERROR)
+			return False
+		if Freespace(self.hdd) < 300000:
+			self.session.open(MessageBox, _("Not enough free space on /hdd !!\nYou need at least 300Mb free space.\n\nExit plugin."), type = MessageBox.TYPE_ERROR)
+			return False
 
-		if not os.path.exists(imagePath):
+		if SystemInfo["canMultiBootGB"]:
+			if not os.path.exists("/media/hdd"):
+				self.session.open(MessageBox, _("No /hdd found !!\nPlease make sure you have a HDD mounted.\n\nExit plugin."), type = MessageBox.TYPE_ERROR)
+				return False
+			if Freespace("/media/hdd") < 300000:
+				self.session.open(MessageBox, _("Not enough free space on /hdd !!\nYou need at least 300Mb free space.\n\nExit plugin."), type = MessageBox.TYPE_ERROR)
+				return False
+			if not os.path.exists(imagePathGB):
+				try:
+					os.mkdir(imagePathGB) 
+				except:
+					pass
+			if os.path.exists(flashPathGB):
+				try:
+					os.system('rm -rf ' + flashPathGB) 
+				except:
+					pass
 			try:
-				os.mkdir(imagePath)
+				os.mkdir(flashPathGB)
 			except:
 				pass
-		
-		if os.path.exists(flashPath):
+			return True
+		if SystemInfo["canMultiBootHD"]:
+			if not os.path.exists("/media/HD51HDD"):
+				self.session.open(MessageBox, _("No /hdd found !!\nPlease make sure you have a HDD mounted.\n\nExit plugin."), type = MessageBox.TYPE_ERROR)
+				return False
+			if Freespace("/media/HD51HDD") < 300000:
+				self.session.open(MessageBox, _("Not enough free space on /hdd !!\nYou need at least 300Mb free space.\n\nExit plugin."), type = MessageBox.TYPE_ERROR)
+				return False
+			if not os.path.exists(imagePath):
+				try:
+					os.mkdir(imagePath)
+				except:
+					pass
+			if os.path.exists(flashPath):
+				try:
+					os.system('rm -rf ' + flashPath) 
+				except:
+					pass
 			try:
-				os.system('rm -rf ' + flashPath)
+				os.mkdir(flashPath)
 			except:
 				pass
-		try:
-			os.mkdir(flashPath)
-		except:
-			pass
-		return True
+			return True
 
 	def quit(self):
 		self.close()
@@ -145,20 +179,19 @@ class FlashOnline(Screen):
 			self.close()
 
 	def yellow(self):
-		if SystemInfo["HaveMultimedia/mmc"]:
-			self.selection = self.selection + 1
-			if self.selection == len(self.list):
-				self.selection = 0
-			self["key_yellow"].setText(_(self.list[self.selection]))
-			if getMachineBuild() in ("gb7252"):
-				self.multi = self.read_startup("/media/mmc/" + self.list[self.selection]).split(".",1)[1].split(":",1)[0]
-				self.multi = self.multi[-1:]
-			else:
-				self.multi = self.read_startup("/media/mmc/" + self.list[self.selection]).split(".",1)[1].split(" ",1)[0]
-				self.multi = self.multi[-1:]
-			print "[Flash Online] MULTI:",self.multi
-			self.devrootfs = self.find_rootfs_dev(self.list[self.selection])
-			print "[Flash Online] MULTI rootfs ", self.devrootfs
+		self.selection = self.selection + 1
+		if self.selection == len(self.list):
+			self.selection = 0
+		self["key_yellow"].setText(_(self.list[self.selection]))
+		if SystemInfo["canMultiBootGB"]:
+			self.multi = self.read_startup("/media/mmc/" + self.list[self.selection]).split(".",1)[1].split(":",1)[0]
+			self.multi = self.multi[-1:]
+		if SystemInfo["canMultiBootHD"]:
+			self.multi = self.read_startup("/media/mmcblk0p1/" + self.list[self.selection]).split(".",1)[1].split(" ",1)[0]
+			self.multi = self.multi[-1:]
+		print "[Flash Online] MULTI:",self.multi
+		self.devrootfs = self.find_rootfs_dev(self.list[self.selection])
+		print "[Flash Online] MULTI rootfs ", self.devrootfs
 
 	def read_startup(self, FILE):
 		self.file = FILE
@@ -168,35 +201,26 @@ class FlashOnline(Screen):
 		return data
 
 	def find_rootfs_dev(self, file):
-		startup_content = self.read_startup("/media/mmc/" + file)
+		if SystemInfo["canMultiBootGB"]:
+			startup_content = self.read_startup("/media/mmc/" + file)
+		if SystemInfo["canMultiBootHD"]:
+			startup_content = self.read_startup("/media/mmcblk0p1/" + file)
 		return startup_content[startup_content.find("root=")+5:].split()[0]
 
 	def list_files(self, PATH):
 		files = []
-		if SystemInfo["HaveMultimedia/mmc"]:
-			path = PATH
-			if getMachineBuild() in ("hd51","vs1500","h7","8100s","gb7252"):
-				for name in os.listdir(path):
-					if name != 'media/mmcname' and os.path.isfile(os.path.join(path, name)):
-						try:
-							cmdline = self.find_rootfs_dev(name)
-						except IndexError:
-							continue
-						cmdline_startup = self.find_rootfs_dev("STARTUP")
-						if (cmdline != cmdline_startup) and (name != "STARTUP"):
-							files.append(name)
-				files.insert(0,"STARTUP")
-			else:
-				for name in os.listdir(path):
-					if name != 'media/mmcname' and os.path.isfile(os.path.join(path, name)):
-						try:
-							cmdline = self.read_startup("/media/mmc/" + name).split("=",1)[1].split(" ",1)[0]
-						except IndexError:
-							continue
-						cmdline_startup = self.read_startup("/media/mmc/cmdline.txt").split("=",1)[1].split(" ",1)[0]
-						if (cmdline != cmdline_startup) and (name != "cmdline.txt"):
-							files.append(name)
-				files.insert(0,"cmdline.txt")
+		path = PATH
+		if SystemInfo["canMultiBoot"]:
+			for name in os.listdir(path):
+				if name != 'bootname' and os.path.isfile(os.path.join(path, name)):
+					try:
+						cmdline = self.find_rootfs_dev(name)
+					except IndexError:
+						continue
+					cmdline_startup = self.find_rootfs_dev("STARTUP")
+					if (cmdline != cmdline_startup) and (name != "STARTUP"):
+						files.append(name)
+			files.insert(0,"STARTUP")
 		else:
 			files = "None"
 		return files
@@ -226,7 +250,6 @@ class doFlashImage(Screen):
 		self["key_yellow"] = StaticText("")
 		self.filename = None
 		self.imagelist = []
-		self.simulate = False
 		self.Online = online
 		self.List = list
 		self.multi=multi
@@ -234,7 +257,7 @@ class doFlashImage(Screen):
 		self.imagePath = imagePath
 		self.feedurl = feedurl_ViX
 		self["imageList"] = MenuList(self.imagelist)
-		self["actions"] = ActionMap(["OkCancelActions", "ColorActions"], 
+		self["actions"] = ActionMap(["OkCancelActions", "ColorActions"],
 		{
 			"green": self.green,
 			"yellow": self.yellow,
@@ -246,7 +269,7 @@ class doFlashImage(Screen):
 
 
 	def quit(self):
-		if self.simulate or self.List not in ("STARTUP","cmdline.txt"):
+		if self.List not in ("STARTUP","cmdline.txt"):
 			fbClass.getInstance().unlock()
 		self.close()
 		
@@ -269,11 +292,13 @@ class doFlashImage(Screen):
 			self["imageList"].l.setList(self.imagelist)
 		
 	def box(self):
-		box = getBoxType()
-		if getMachineMake() == 'mutant51':
-			box = 'Mutant-HD51'
-		elif getMachineMake() == 'mutant52':
-			box = 'Mutant-HD52'
+#		model = HardwareInfo().get_device_name()
+#		if model == 'hd51':
+		if SystemInfo["canMultiBootHD"]:
+			box = "Mutant-HD51"
+		if SystemInfo["canMultiBootGB"]:
+			box = "gbquad4k"
+
 		return box
 
 	def green(self, ret = None):
@@ -338,48 +363,24 @@ class doFlashImage(Screen):
 		self.Start_Flashing()
 
 	def Start_Flashing(self):
-		print "Start Flashing"
 		cmdlist = []
 		if os.path.exists(ofgwritePath):
 			text = _("Flashing: ")
-			if self.simulate:
-				text += _("Simulate (no write)")
-				if SystemInfo["HaveMultimedia/mmc"]:
-					cmdlist.append("%s -n -r -k -m%s %s > /dev/null 2>&1" % (ofgwritePath, self.multi, flashTmp))
-				else:
-					cmdlist.append("%s -n -r -k %s > /dev/null 2>&1" % (ofgwritePath, flashTmp))
-				self.close()
-				message = "echo -e '\n"
-				message += _('Show only found image and mtd partitions.\n')
-				message += "'"
-			else:
-				text += _("root and kernel")
-				if SystemInfo["HaveMultimedia/mmc"]:
-					if self.List not in ("STARTUP","cmdline.txt"):
-						os.system('mkfs.ext4 -F ' + self.devrootfs)
-					cmdlist.append("%s -r -k -m%s %s > /dev/null 2>&1" % (ofgwritePath, self.multi, flashTmp))
-					if self.List not in ("STARTUP","cmdline.txt"):
-						cmdlist.append("umount -fl /oldroot_bind")
-						cmdlist.append("umount -fl /newroot")
-				else:
-					cmdlist.append("%s -r -k %s > /dev/null 2>&1" % (ofgwritePath, flashTmp))
-				message = "echo -e '\n"
-				if self.List not in ("STARTUP","cmdline.txt") and SystemInfo["HaveMultimedia/mmc"]:
-					message += _('ofgwrite flashing ready.\n')
-					message += _('please press exit to go back to the menu.\n')
-				else:
-					message += _('ofgwrite will stop enigma2 now to run the flash.\n')
-					message += _('Your STB will freeze during the flashing process.\n')
-					message += _('Please: DO NOT remedia/mmc your STB and turn off the power.\n')
-					message += _('The image or kernel will be flashing and auto media/mmced in few minutes.\n')
-
-				message += "'"
-			cmdlist.append(message)
-			self.session.open(Console, title = text, cmdlist = cmdlist, finishedCallback = self.quit, closeOnSuccess = False)
-			if not self.simulate:
-				fbClass.getInstance().lock()
-			if self.List not in ("STARTUP","cmdline.txt"):
-				self.close()
+			text += _("root and kernel")
+		print "[Flash Online] multi = %s, flashtmp = %s, flashtmpGB= %s" %(self.multi, flashTmp, flashTmpGB)
+		if SystemInfo["canMultiBootHD"]:
+			cmdlist.append("%s -r -k -m%s %s > /dev/null 2>&1" % (ofgwritePath, self.multi, flashTmp)) %unk
+		else:
+			cmdlist.append("%s -r -k -m%s %s > /dev/null 2>&1" % (ofgwritePath, self.multi, flashTmpGB))
+		message = "echo -e '\n"
+		message += _('ofgwrite will stop enigma2 now to run the flash.\n')
+		message += _('Your STB will freeze during the flashing process.\n')
+		message += _('Please: DO NOT remedia/mmc your STB and turn off the power.\n')
+		message += _('The image or kernel will be flashing and auto media/mmced in few minutes.\n')
+		message += "'"
+		cmdlist.append(message)
+		self.session.open(Console, title = text, cmdlist = cmdlist, finishedCallback = self.quit, closeOnSuccess = False)
+		fbClass.getInstance().lock()
 
 	def prepair_flashtmp(self, tmpPath):
 		if os.path.exists(flashTmp):
@@ -395,25 +396,15 @@ class doFlashImage(Screen):
 			for name in files:
 				if name.find('kernel') > -1 and name.endswith('.bin') and kernel:
 					binfile = os.path.join(path, name)
-					dest = flashTmp + '/%s' %KERNELBIN
+					dest = flashTmp + '/kernel.bin' 
 					shutil.copyfile(binfile, dest)
 					kernel = False
 				elif name.find('root') > -1 and (name.endswith('.bin') or name.endswith('.jffs2') or name.endswith('.bz2')) and rootfs:
 					binfile = os.path.join(path, name)
-					dest = flashTmp + '/%s' %ROOTFSBIN
+					dest = flashTmp + '/rootfs.tar.bz2'
 					shutil.copyfile(binfile, dest)
 					rootfs = False
-				elif name.find('uImage') > -1 and kernel:
-					binfile = os.path.join(path, name)
-					dest = flashTmp + '/uImage'
-					shutil.copyfile(binfile, dest)
-					kernel = False
-				elif name.find('e2jffs2') > -1 and name.endswith('.img') and rootfs:
-					binfile = os.path.join(path, name)
-					dest = flashTmp + '/e2jffs2.img'
-					shutil.copyfile(binfile, dest)
-					rootfs = False
-					
+
 	def yellow(self):
 		if not self.Online:
 			self.session.openWithCallback(self.DeviceBrowserClosed, DeviceBrowser, None, matchingPattern="^.*\.(zip|bin|jffs2|img)", showDirectories=True, showMountpoints=True, inhibitMounts=["/autofs/sr0/"])
@@ -442,25 +433,32 @@ class doFlashImage(Screen):
 			self.imagePath = imagePath
 
 	def layoutFinished(self):
-		self.boxtype = self.box()
+		if SystemInfo["canMultiBootHD"]:
+			self.boxtype = "Mutant-HD51"
+			self.model = "mutant51"
+		if SystemInfo["canMultiBootGB"]:
+			self.boxtype = "gbquad4k"
+			self.model = "gbquad4k"
 		self.imagelist = []
 		if self.Online:
 			self["key_yellow"].setText("Flash")
 			self["key_blue"] = StaticText("")
 			self.feedurl = feedurl_ViX
-
 			from bs4 import BeautifulSoup
-			url = self.feedurl+'/'+self.boxtype+'/'
+			url = 'http://192.168.0.171/openvix-builds/'+self.boxtype+'/'
 			conn = urllib2.urlopen(url)
 			the_page = conn.read()
 
 			soup = BeautifulSoup(the_page)
 			links = soup.find_all('a')
-
-			for tag in links:
-				link = tag.get('href',None)
-				if link != None and link.endswith('zip') and link.find(getMachineMake()) != -1:
+			print "[Flash Online] -4 soup =  %s links = %s" %(soup, links)
+			for tag in links: 
+				link = tag.get('href',None) 
+				if link != None and link.endswith('zip') and link.find(self.model) != -1:
 					self.imagelist.append(str(link))
+			self.imagelist.sort()
+			self.imagelist.reverse()
+
 		else:
 			self["key_blue"].setText(_("Delete"))
 			self["key_yellow"].setText(_("Devices"))
@@ -550,7 +548,7 @@ class DeviceBrowser(Screen, HelpableScreen):
 		Screen.setTitle(self, _("Please select medium"))
 
 		self["key_red"] = StaticText(_("Cancel"))
-		self["key_green"] = StaticText()
+		self["key_green"] = StaticText("Use")
 		self["message"] = StaticText(message)
 
 		self.filelist = FileList(startdir, showDirectories = showDirectories, showFiles = showFiles, showMountpoints = showMountpoints, matchingPattern = matchingPattern, useServiceRef = useServiceRef, inhibitDirs = inhibitDirs, inhibitMounts = inhibitMounts, isTop = isTop, enableWrapAround = enableWrapAround, additionalExtensions = additionalExtensions)
