@@ -17,6 +17,7 @@ from Screens.HelpMenu import HelpableScreen
 from Screens.TaskView import JobView
 from Tools.Downloader import downloadWithProgress
 from Tools.Directories import fileExists, fileCheck
+from Tools.Multiboot import GetImagelist, GetCurrentImage, GetCurrentImageMode
 from enigma import fbClass
 import urllib2
 import os
@@ -26,16 +27,15 @@ from Tools.HardwareInfo import HardwareInfo
 # from boxbranding import getBoxType,  getImageDistro, getMachineName, getMachineBrand, getImageVersion, getMachineKernelFile, getMachineRootFile, getMachineMake, getMachineBuild
 
 #############################################################################################################
-#
-#        Thanks to OpenATV Team for supplyng most of this code
-#
 feedurl_ViX = 'http://192.168.0.171/openvix-builds' 
 imagePathGB = '/media/hdd/images'
 flashPathGB = '/media/hdd/images/flash'
 flashTmpGB = '/media/hdd/images/tmp'
+hddGB = "/media/hdd"
 imagePath = '/media/HD51HDD/images'
 flashPath = '/media/HD51HDD/images/flash'
 flashTmp = '/media/HD51HDD/images/tmp'
+hddHD = "/media/HD51HDD"
 ofgwritePath = '/usr/bin/ofgwrite'
 #############################################################################################################
 
@@ -60,8 +60,8 @@ class FlashOnline(Screen):
 		<ePixmap position="420,360" zPosition="1" size="140,40" pixmap="skin_default/buttons/blue.png" transparent="1" alphatest="on" />
 		<widget source="key_red" render="Label" position="0,360" zPosition="2" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" shadowColor="black" shadowOffset="-1,-1" />
 		<widget source="key_green" render="Label" position="140,360" zPosition="2" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" shadowColor="black" shadowOffset="-1,-1" />
-		<widget source="key_yellow" render="Label" position="280,360" zPosition="2" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" shadowColor="black" shadowOffset="-1,-1" />
-		<widget source="key_blue" render="Label" position="420,360" zPosition="2" size="140,40" valign="center" halign="center" font="Regular;21" transparent="1" shadowColor="black" shadowOffset="-1,-1" />
+		<widget source="key_yellow" render="Label" position="280,360" zPosition="2" size="140,40" valign="center" halign="center" font="Regular;17" transparent="1" shadowColor="black" shadowOffset="-1,-1" />
+		<widget source="key_blue" render="Label" position="420,360" zPosition="2" size="140,40" valign="center" halign="center" font="Regular;17" transparent="1" shadowColor="black" shadowOffset="-1,-1" />
 		<widget name="info-online" position="10,30" zPosition="1" size="450,100" font="Regular;20" halign="left" valign="top" transparent="1" />
 		<widget name="info-local" position="10,150" zPosition="1" size="450,200" font="Regular;20" halign="left" valign="top" transparent="1" />
 	</screen>"""
@@ -71,41 +71,36 @@ class FlashOnline(Screen):
 		self.session = session
 		self.selection = 0
 		self.multi = 1
-		if SystemInfo["canMultiBootHD"]:
-			self.devrootfs = "/dev/mmcblk0p3"
-			self.list = self.list_files("/media/mmcblk0p1")
-		if SystemInfo["canMultiBootGB"]:
-			self.devrootfs = "/dev/mmcblk0p4"
-			self.list = self.list_files("/media/mmc")
+		self.getImageList = None
+		self.imagelist = {}
+		self.hdd = hddHD
 
 		Screen.setTitle(self, _("Flash On the Fly"))
-		self["key_yellow"] = StaticText(_("STARTUP"))
-		self["key_green"] = StaticText(_("Online"))
 		self["key_red"] = StaticText(_("Exit"))
-		self["key_blue"] = StaticText(_("Local"))
+		self["key_green"] = StaticText(_("Online"))
+		self["key_blue"] = StaticText(_("STARTUP"))
+		self["key_yellow"] = StaticText(_("Local"))
 		self["info-local"] = Label(_("Local = Flash a image from local path /hdd/images"))
 		self["info-online"] = Label(_("Online = Download a image and flash it"))
 		
 		self["actions"] = ActionMap(["OkCancelActions", "ColorActions"], 
 		{
-			"blue": self.blue,
-			"yellow": self.yellow,
-			"green": self.green,
 			"red": self.quit,
+			"green": self.green,
+			"yellow": self.yellow,
+			"blue": self.blue,
 			"cancel": self.quit,
 		}, -2)
+	
 		if SystemInfo["canMultiBootGB"]:
-			self.hdd = "/media/hdd"
-			self.multi = self.read_startup("/media/mmc/" + self.list[self.selection]).split(".",1)[1].split(":",1)[0]
-			self.multi = self.multi[-1:]
-		if SystemInfo["canMultiBootHD"]:
-			self.hdd = "/media/HD51HDD"
-			self.multi = self.read_startup("/media/mmcblk0p1/" + self.list[self.selection]).split(".",1)[1].split(" ",1)[0]
-			self.multi = self.multi[-1:]
-#		imagePath = "%s + %s" %(self.hdd, images)
-#		flashPath = "%s + %s" %(imagePath, flash)
-#		flashTmp = "%s + %s" %(imagePath, tmp)
-		print "[Flash Online] MULTI:",self.multi
+			self.hdd = hddGB
+			imagePath = imagePathGB
+			flashPath = flashPathGB
+			flashTmp = flashTmpGB
+		self.getImageList = GetImagelist(self.getImagelistCallback)		
+
+	def getImagelistCallback(self, imagedict):
+		self.imagelist = imagedict
 
 	def check_hdd(self):
 		if not os.path.exists(ofgwritePath):
@@ -118,112 +113,45 @@ class FlashOnline(Screen):
 			self.session.open(MessageBox, _("Not enough free space on /hdd !!\nYou need at least 300Mb free space.\n\nExit plugin."), type = MessageBox.TYPE_ERROR)
 			return False
 
-		if SystemInfo["canMultiBootGB"]:
-			if not os.path.exists("/media/hdd"):
-				self.session.open(MessageBox, _("No /hdd found !!\nPlease make sure you have a HDD mounted.\n\nExit plugin."), type = MessageBox.TYPE_ERROR)
-				return False
-			if Freespace("/media/hdd") < 300000:
-				self.session.open(MessageBox, _("Not enough free space on /hdd !!\nYou need at least 300Mb free space.\n\nExit plugin."), type = MessageBox.TYPE_ERROR)
-				return False
-			if not os.path.exists(imagePathGB):
-				try:
-					os.mkdir(imagePathGB) 
-				except:
-					pass
-			if os.path.exists(flashPathGB):
-				try:
-					os.system('rm -rf ' + flashPathGB) 
-				except:
-					pass
+		if not os.path.exists(imagePath):
 			try:
-				os.mkdir(flashPathGB)
+				os.mkdir(imagePath)
 			except:
 				pass
-			return True
-		if SystemInfo["canMultiBootHD"]:
-			if not os.path.exists("/media/HD51HDD"):
-				self.session.open(MessageBox, _("No /hdd found !!\nPlease make sure you have a HDD mounted.\n\nExit plugin."), type = MessageBox.TYPE_ERROR)
-				return False
-			if Freespace("/media/HD51HDD") < 300000:
-				self.session.open(MessageBox, _("Not enough free space on /hdd !!\nYou need at least 300Mb free space.\n\nExit plugin."), type = MessageBox.TYPE_ERROR)
-				return False
-			if not os.path.exists(imagePath):
-				try:
-					os.mkdir(imagePath)
-				except:
-					pass
-			if os.path.exists(flashPath):
-				try:
-					os.system('rm -rf ' + flashPath) 
-				except:
-					pass
+		if os.path.exists(flashPath):
 			try:
-				os.mkdir(flashPath)
+				os.system('rm -rf ' + flashPath) 
 			except:
 				pass
-			return True
+		try:
+			os.mkdir(flashPath)
+		except:
+			pass
+		return True
 
 	def quit(self):
 		self.close()
 		
-	def blue(self):
+	def yellow(self):
 		if self.check_hdd():
-			self.session.open(doFlashImage, online = False, list=self.list[self.selection], multi=self.multi, devrootfs=self.devrootfs)
+			self.session.open(doFlashImage, online = False, list=self.imagelist[self.selection], multi=self.multi)
 		else:
 			self.close()
 
 	def green(self):
 		if self.check_hdd():
-			self.session.open(doFlashImage, online = True, list=self.list[self.selection], multi=self.multi, devrootfs=self.devrootfs)
+			self.session.open(doFlashImage, online = True, list=self.imagelist[self.selection], multi=self.multi)
 		else:
 			self.close()
 
-	def yellow(self):
+	def blue(self):
+		imagedict = self.imagelist
 		self.selection = self.selection + 1
-		if self.selection == len(self.list):
+		x = self.selection
+		self.multi = x
+		if self.selection == len(self.imagelist):
 			self.selection = 0
-		self["key_yellow"].setText(_(self.list[self.selection]))
-		if SystemInfo["canMultiBootGB"]:
-			self.multi = self.read_startup("/media/mmc/" + self.list[self.selection]).split(".",1)[1].split(":",1)[0]
-			self.multi = self.multi[-1:]
-		if SystemInfo["canMultiBootHD"]:
-			self.multi = self.read_startup("/media/mmcblk0p1/" + self.list[self.selection]).split(".",1)[1].split(" ",1)[0]
-			self.multi = self.multi[-1:]
-		print "[Flash Online] MULTI:",self.multi
-		self.devrootfs = self.find_rootfs_dev(self.list[self.selection])
-		print "[Flash Online] MULTI rootfs ", self.devrootfs
-
-	def read_startup(self, FILE):
-		self.file = FILE
-		with open(self.file, 'r') as myfile:
-			data=myfile.read().replace('\n', '')
-		myfile.close()
-		return data
-
-	def find_rootfs_dev(self, file):
-		if SystemInfo["canMultiBootGB"]:
-			startup_content = self.read_startup("/media/mmc/" + file)
-		if SystemInfo["canMultiBootHD"]:
-			startup_content = self.read_startup("/media/mmcblk0p1/" + file)
-		return startup_content[startup_content.find("root=")+5:].split()[0]
-
-	def list_files(self, PATH):
-		files = []
-		path = PATH
-		if SystemInfo["canMultiBoot"]:
-			for name in os.listdir(path):
-				if name != 'bootname' and os.path.isfile(os.path.join(path, name)):
-					try:
-						cmdline = self.find_rootfs_dev(name)
-					except IndexError:
-						continue
-					cmdline_startup = self.find_rootfs_dev("STARTUP")
-					if (cmdline != cmdline_startup) and (name != "STARTUP"):
-						files.append(name)
-			files.insert(0,"STARTUP")
-		else:
-			files = "None"
-		return files
+		self["key_blue"].setText(_("STARTUP_%s: %s") %(x, imagedict[x]['imagename']))
 
 class doFlashImage(Screen):
 	skin = """
@@ -239,29 +167,28 @@ class doFlashImage(Screen):
 		<widget name="imageList" position="10,10" zPosition="1" size="450,450" font="Regular;20" scrollbarMode="showOnDemand" transparent="1" />
 	</screen>"""
 		
-	def __init__(self, session, online, list=None, multi=None, devrootfs=None ):
+	def __init__(self, session, online, list=None, multi=None):
 		Screen.__init__(self, session)
 		self.session = session
 
 		Screen.setTitle(self, _("Flash On the fly (select a image)"))
-		self["key_green"] = StaticText(_("Flash"))
 		self["key_red"] = StaticText(_("Exit"))
-		self["key_blue"] = StaticText("")
-		self["key_yellow"] = StaticText("")
+		self["key_green"] = StaticText(_("Flash"))
+		self["key_yellow"] = StaticText("DeviceB")
+		self["key_blue"] = StaticText("Delete")
+
 		self.filename = None
 		self.imagelist = []
 		self.Online = online
 		self.List = list
 		self.multi=multi
-		self.devrootfs=devrootfs
-		self.imagePath = imagePath
 		self.feedurl = feedurl_ViX
 		self["imageList"] = MenuList(self.imagelist)
 		self["actions"] = ActionMap(["OkCancelActions", "ColorActions"],
 		{
+			"red": self.quit,
 			"green": self.green,
 			"yellow": self.yellow,
-			"red": self.quit,
 			"blue": self.blue,
 			"cancel": self.quit,
 		}, -2)
@@ -282,35 +209,34 @@ class doFlashImage(Screen):
 			print"Nothing to select !!"
 			return
 		self.filename = sel
-		self.session.openWithCallback(self.RemoveCB, MessageBox, _("Do you really want to delete\n%s ?") % (sel), MessageBox.TYPE_YESNO)
+		self.session.openWithCallback(self.RemoveCallBack, MessageBox, _("Do you really want to delete\n%s ?") % (sel), MessageBox.TYPE_YESNO)
 
-	def RemoveCB(self, ret):
+	def RemoveCallBack(self, ret):
 		if ret:
-			if os.path.exists(self.imagePath + "/" + self.filename):
-				os.remove(self.imagePath + "/" + self.filename)
+			if os.path.exists(imagePath + "/" + self.filename):
+				os.remove(imagePath + "/" + self.filename)
 			self.imagelist.remove(self.filename)
 			self["imageList"].l.setList(self.imagelist)
 		
 	def box(self):
-#		model = HardwareInfo().get_device_name()
-#		if model == 'hd51':
 		if SystemInfo["canMultiBootHD"]:
 			box = "Mutant-HD51"
 		if SystemInfo["canMultiBootGB"]:
 			box = "gbquad4k"
-
 		return box
 
 	def green(self, ret = None):
 		self.sel = self["imageList"].l.getCurrentSelection()
 		if self.sel == None:
-			print"Nothing to select !!"
+			print "[Flash Online -nothing selected]Nothing to select !!"
 			return
 
 		self.feedurl = feedurl_ViX
+		self.imagePath = imagePath
 		self.filename = self.imagePath + "/" + self.sel
 		self.boxtype = self.box()
 		self.hide()
+		print "[Flash Online -Paths1] ImagePath = %s, filename = %s, flashPath = %s, flashTmp = %s" %(self.imagePath, self.filename, flashPath, flashTmp)
 		if self.Online:
 			url = self.feedurl+'/'+self.boxtype+'/' + "/" + self.sel
 			print "[Flash Online] Download image: >%s<" % url
@@ -344,18 +270,20 @@ class doFlashImage(Screen):
 			self.close()
 			return
 		if len(job_manager.failed_jobs) == 0:
-			self.session.openWithCallback(self.askUnzipCB, MessageBox, _("The image is downloaded. Do you want to flash now?"), MessageBox.TYPE_YESNO)
+			self.session.openWithCallback(self.askUnzipCallBack, MessageBox, _("Image downloaded. Flash STARTUP_%s now?" %self.multi), MessageBox.TYPE_YESNO)
 		else:
 			self.session.open(MessageBox, _("Download Failed !!"), type = MessageBox.TYPE_ERROR)
 
-	def askUnzipCB(self, ret):
+	def askUnzipCallBack(self, ret):
 		if ret:
+			print "[Flash Online] self.filename = %s, path = %s" %(self.filename, flashPath)
 			self.unzip_image(self.filename, flashPath)
 		else:
 			self.show()
 
 	def unzip_image(self, filename, path):
-		print "Unzip %s to %s" %(filename,path)
+		cmdlist = ['unzip ' + filename + ' -o -d ' + path, "sleep 3"]
+		print "[Flash Online UnZip] Unzip: %s to: %s , cmdlist= %s" %(filename, path, cmdlist)
 		self.session.openWithCallback(self.cmdFinished, Console, title = _("Unzipping files, Please wait ..."), cmdlist = ['unzip ' + filename + ' -o -d ' + path, "sleep 3"], closeOnSuccess = True)
 
 	def cmdFinished(self):
@@ -367,16 +295,13 @@ class doFlashImage(Screen):
 		if os.path.exists(ofgwritePath):
 			text = _("Flashing: ")
 			text += _("root and kernel")
-		print "[Flash Online] multi = %s, flashtmp = %s, flashtmpGB= %s" %(self.multi, flashTmp, flashTmpGB)
-		if SystemInfo["canMultiBootHD"]:
-			cmdlist.append("%s -r -k -m%s %s > /dev/null 2>&1" % (ofgwritePath, self.multi, flashTmp)) %unk
-		else:
-			cmdlist.append("%s -r -k -m%s %s > /dev/null 2>&1" % (ofgwritePath, self.multi, flashTmpGB))
+		print "[Flash Online cmdlist] multi = %s, flashtmp = %s" %(self.multi, flashTmp)
+		cmdlist.append("%s -r -k -m%s %s > /dev/null 2>&1" % (ofgwritePath, self.multi, flashTmp))
 		message = "echo -e '\n"
-		message += _('ofgwrite will stop enigma2 now to run the flash.\n')
+		message += _('ofgwrite will stop enigma2 now to run the flash for STARTUP_%s.\n' %self.multi)
 		message += _('Your STB will freeze during the flashing process.\n')
-		message += _('Please: DO NOT remedia/mmc your STB and turn off the power.\n')
-		message += _('The image or kernel will be flashing and auto media/mmced in few minutes.\n')
+		message += _('Please: DO NOT remove media and turn off the power.\n')
+		message += _('The image or kernel will be flashing and auto boot in few minutes.\n')
 		message += "'"
 		cmdlist.append(message)
 		self.session.open(Console, title = text, cmdlist = cmdlist, finishedCallback = self.quit, closeOnSuccess = False)
@@ -451,7 +376,6 @@ class doFlashImage(Screen):
 
 			soup = BeautifulSoup(the_page)
 			links = soup.find_all('a')
-			print "[Flash Online] -4 soup =  %s links = %s" %(soup, links)
 			for tag in links: 
 				link = tag.get('href',None) 
 				if link != None and link.endswith('zip') and link.find(self.model) != -1:
