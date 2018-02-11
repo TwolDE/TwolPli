@@ -42,8 +42,23 @@ class GetImagelist():
 			
 	def appClosed(self, data, retval, extra_args):
 		if retval == 0 and self.phase == self.MOUNT:
+			BuildVersion = "  "
+			Build = " "
+			Version = " "
+			if os.path.isfile("/tmp/testmount/usr/bin/enigma2") and os.path.isfile('/tmp/testmount/etc/image-version'):
+				file = open('/tmp/testmount/etc/image-version', 'r')
+				lines = file.read().splitlines()
+				for x in lines:
+					splitted = x.split('= ')
+					if len(splitted) > 1:
+						if splitted[0].startswith("Version"):
+							Version = splitted[1].split(' ')[0]
+						elif splitted[0].startswith("Build"):
+							Build = splitted[1].split(' ')[0]
+				file.close()
+				BuildVersion = " " + Build
 			if os.path.isfile("/tmp/testmount/usr/bin/enigma2"):
-				self.imagelist[self.slot] =  { 'imagename': open("/tmp/testmount/etc/issue").readlines()[-2].capitalize().strip()[:-6] }
+				self.imagelist[self.slot] =  { 'imagename': open("/tmp/testmount/etc/issue").readlines()[-2].capitalize().strip()[:-6] + BuildVersion}
 			self.phase = self.UNMOUNT
 			self.run()
 		elif self.slot < self.endslot:

@@ -292,9 +292,8 @@ class doFlashImage(Screen):
 
 	def Start_Flashing(self):
 		cmdlist = []
-		if os.path.exists(ofgwritePath):
-			text = _("Flashing: ")
-			text += _("root and kernel")
+		text = _("Flashing: ")
+		text += _("root and kernel")
 		print "[Flash Online cmdlist] multi = %s, flashtmp = %s" %(self.multi, flashTmp)
 		cmdlist.append("%s -r -k -m%s %s > /dev/null 2>&1" % (ofgwritePath, self.multi, flashTmp))
 		message = "echo -e '\n"
