@@ -134,13 +134,13 @@ class FlashOnline(Screen):
 		
 	def yellow(self):
 		if self.check_hdd():
-			self.session.open(doFlashImage, online = False, list=self.imagelist[self.selection], multi=self.multi)
+			self.session.open(doFlashImage, online = False, multi=self.multi)
 		else:
 			self.close()
 
 	def green(self):
 		if self.check_hdd():
-			self.session.open(doFlashImage, online = True, list=self.imagelist[self.selection], multi=self.multi)
+			self.session.open(doFlashImage, online = True, multi=self.multi)
 		else:
 			self.close()
 
@@ -167,7 +167,7 @@ class doFlashImage(Screen):
 		<widget name="imageList" position="10,10" zPosition="1" size="450,450" font="Regular;20" scrollbarMode="showOnDemand" transparent="1" />
 	</screen>"""
 		
-	def __init__(self, session, online, list=None, multi=None):
+	def __init__(self, session, online, multi=None):
 		Screen.__init__(self, session)
 		self.session = session
 
@@ -180,7 +180,6 @@ class doFlashImage(Screen):
 		self.filename = None
 		self.imagelist = []
 		self.Online = online
-		self.List = list
 		self.multi=multi
 		self.feedurl = feedurl_ViX
 		self["imageList"] = MenuList(self.imagelist)
