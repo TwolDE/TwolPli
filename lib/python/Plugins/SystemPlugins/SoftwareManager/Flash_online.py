@@ -174,7 +174,7 @@ class doFlashImage(Screen):
 		Screen.setTitle(self, _("Flash On the fly (select a image)"))
 		self["key_red"] = StaticText(_("Exit"))
 		self["key_green"] = StaticText(_("Flash"))
-		self["key_yellow"] = StaticText("DeviceB")
+		self["key_yellow"] = StaticText("LocalHDD")
 		self["key_blue"] = StaticText("Delete")
 
 		self.filename = None

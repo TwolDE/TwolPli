@@ -30,7 +30,7 @@ class MultiBootStartup(ConfigListScreen, Screen):
 	def __init__(self, session, *args):
 		Screen.__init__(self, session)
 		self["key_red"] = StaticText(_("Cancel"))
-		self["key_green"] = StaticText(_("Save"))
+		self["key_green"] = StaticText(_("ReBoot"))
 		self["config"] = StaticText(_("Select Image: STARTUP_1"))
 		self.mulitold = 0
 		if path.exists('/media/mmc/STARTUP'):
