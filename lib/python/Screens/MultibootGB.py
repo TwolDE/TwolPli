@@ -65,7 +65,7 @@ class MultiBootStartup(ConfigListScreen, Screen):
 	def startup(self, imagedict):
 		x = self.selection + 1
 #		print "Multiboot OldImage %s NewFlash %s FlashType %s" % (self.multiold, self.selection, x)
-		self["config"].setText(_("Current Image: STARTUP_%s \n Reboot STARTUP_%s: %s\n Use cursor keys < > to change Image\n Press (Green)Save button to reboot selected Image.") %(self.multiold, x, imagedict[x]['imagename']))
+		self["config"].setText(_("Current Image: STARTUP_%s \n Reboot STARTUP_%s: %s\n Use cursor keys < > to change Image\n Press Green button to reboot selected Image.") %(self.multiold, x, imagedict[x]['imagename']))
 
 
 	def save(self):

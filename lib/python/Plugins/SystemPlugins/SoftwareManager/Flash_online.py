@@ -195,8 +195,6 @@ class doFlashImage(Screen):
 
 
 	def quit(self):
-		if self.List not in ("STARTUP","cmdline.txt"):
-			fbClass.getInstance().unlock()
 		self.close()
 		
 	def blue(self):
@@ -302,8 +300,22 @@ class doFlashImage(Screen):
 		message += _('The image or kernel will be flashing and auto boot in few minutes.\n')
 		message += "'"
 		cmdlist.append(message)
-		self.session.open(Console, title = text, cmdlist = cmdlist, finishedCallback = self.quit, closeOnSuccess = False)
+		self.session.open(Console, title = text, cmdlist = cmdlist, finishedCallback = self.CopyStartup, closeOnSuccess = False)
 		fbClass.getInstance().lock()
+
+	def CopyStartup(self, result, retval, extra_args=None):
+		print "FlashImage-3 Flash retval %s result %s Image STARTUP_%s " % (retval, result, self.multinew)
+		fbClass.getInstance().unlock()
+		if retval == 0:
+			for media in ['/media/%s' % x for x in os.listdir('/media') if x.startswith('mmc')]:
+				if 'STARTUP' in os.listdir(media):
+				os.system("cp -f '%s/STARTUP_%s' '%s/STARTUP' %(media, self.multinew)
+					break
+			self.session.open(TryQuitMainloop, 2)
+		else:
+			self.session.open(MessageBox, _("Image Flash failed - note: ViX Backup not restorable, only image from feeds"), MessageBox.TYPE_INFO, timeout=10, enable_input=False)			
+			self.close()
+
 
 	def prepair_flashtmp(self, tmpPath):
 		if os.path.exists(flashTmp):
