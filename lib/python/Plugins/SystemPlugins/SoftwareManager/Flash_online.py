@@ -309,7 +309,7 @@ class doFlashImage(Screen):
 		if retval == 0:
 			for media in ['/media/%s' % x for x in os.listdir('/media') if x.startswith('mmc')]:
 				if 'STARTUP' in os.listdir(media):
-				os.system("cp -f '%s/STARTUP_%s' '%s/STARTUP' %(media, self.multinew)
+					os.system("cp -f 'media/STARTUP_%s' media/STARTUP" %self.multinew)
 					break
 			self.session.open(TryQuitMainloop, 2)
 		else:
