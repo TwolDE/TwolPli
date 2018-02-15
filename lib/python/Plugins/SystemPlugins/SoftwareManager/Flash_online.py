@@ -14,6 +14,7 @@ from Screens.ChoiceBox import ChoiceBox
 from Screens.Screen import Screen
 from Screens.Console import Console
 from Screens.HelpMenu import HelpableScreen
+from Screens.Standby import TryQuitMainloop
 from Screens.TaskView import JobView
 from Tools.Downloader import downloadWithProgress
 from Tools.Directories import fileExists, fileCheck
@@ -24,17 +25,12 @@ import os
 import shutil
 import math
 from Tools.HardwareInfo import HardwareInfo
-# from boxbranding import getBoxType,  getImageDistro, getMachineName, getMachineBrand, getImageVersion, getMachineKernelFile, getMachineRootFile, getMachineMake, getMachineBuild
 
 #############################################################################################################
 feedurl_ViX = 'http://192.168.0.171/openvix-builds' 
 imagePathGB = '/media/hdd/images'
-flashPathGB = '/media/hdd/images/flash'
-flashTmpGB = '/media/hdd/images/tmp'
 hddGB = "/media/hdd"
 imagePath = '/media/HD51HDD/images'
-flashPath = '/media/HD51HDD/images/flash'
-flashTmp = '/media/HD51HDD/images/tmp'
 hddHD = "/media/HD51HDD"
 ofgwritePath = '/usr/bin/ofgwrite'
 #############################################################################################################
@@ -73,7 +69,6 @@ class FlashOnline(Screen):
 		self.multi = 1
 		self.getImageList = None
 		self.imagelist = {}
-		self.hdd = hddHD
 
 		Screen.setTitle(self, _("Flash On the Fly"))
 		self["key_red"] = StaticText(_("Exit"))
@@ -94,9 +89,12 @@ class FlashOnline(Screen):
 	
 		if SystemInfo["canMultiBootGB"]:
 			self.hdd = hddGB
-			imagePath = imagePathGB
-			flashPath = flashPathGB
-			flashTmp = flashTmpGB
+			self.imagePath = imagePathGB
+		else:
+			self.hdd = hddHD
+			self.imagePath = imagePath
+		self.flashPath = (self.imagePath + "/" + "flash")
+		self.tmpPath = (self.imagePath + "/" + "tmp")
 		self.getImageList = GetImagelist(self.getImagelistCallback)		
 
 	def getImagelistCallback(self, imagedict):
@@ -113,18 +111,18 @@ class FlashOnline(Screen):
 			self.session.open(MessageBox, _("Not enough free space on /hdd !!\nYou need at least 300Mb free space.\n\nExit plugin."), type = MessageBox.TYPE_ERROR)
 			return False
 
-		if not os.path.exists(imagePath):
+		if not os.path.exists(self.imagePath):
 			try:
-				os.mkdir(imagePath)
+				os.mkdir(self.imagePath)
 			except:
 				pass
-		if os.path.exists(flashPath):
+		if os.path.exists(self.flashPath):
 			try:
-				os.system('rm -rf ' + flashPath) 
+				os.system('rm -rf ' + self.flashPath) 
 			except:
 				pass
 		try:
-			os.mkdir(flashPath)
+			os.mkdir(self.flashPath)
 		except:
 			pass
 		return True
@@ -178,6 +176,14 @@ class doFlashImage(Screen):
 		self["key_blue"] = StaticText("Delete")
 
 		self.filename = None
+		if SystemInfo["canMultiBootGB"]:
+			self.hdd = hddGB
+			self.imagePath = imagePathGB
+		else:
+			self.hdd = hddHD
+			self.imagePath = imagePath
+		self.flashPath = (self.imagePath + "/" + "flash")
+		self.tmpPath = (self.imagePath + "/" + "tmp")
 		self.imagelist = []
 		self.Online = online
 		self.multi=multi
@@ -210,8 +216,8 @@ class doFlashImage(Screen):
 
 	def RemoveCallBack(self, ret):
 		if ret:
-			if os.path.exists(imagePath + "/" + self.filename):
-				os.remove(imagePath + "/" + self.filename)
+			if os.path.exists(self.imagePath + "/" + self.filename):
+				os.remove(self.imagePath + "/" + self.filename)
 			self.imagelist.remove(self.filename)
 			self["imageList"].l.setList(self.imagelist)
 		
@@ -229,11 +235,10 @@ class doFlashImage(Screen):
 			return
 
 		self.feedurl = feedurl_ViX
-		self.imagePath = imagePath
 		self.filename = self.imagePath + "/" + self.sel
 		self.boxtype = self.box()
 		self.hide()
-		print "[Flash Online -Paths1] ImagePath = %s, filename = %s, flashPath = %s, flashTmp = %s" %(self.imagePath, self.filename, flashPath, flashTmp)
+		print "[Flash Online -Paths1] ImagePath = %s, filename = %s, flashPath = %s, tmpPath = %s" %(self.imagePath, self.filename, self.flashPath, self.tmpPath)
 		if self.Online:
 			url = self.feedurl+'/'+self.boxtype+'/' + "/" + self.sel
 			print "[Flash Online] Download image: >%s<" % url
@@ -254,10 +259,10 @@ class doFlashImage(Screen):
 				self.session.openWithCallback(self.ImageDownloadCB, MessageBox, _("Download Failed !!" + "\n%s" % e), type = MessageBox.TYPE_ERROR)
 				self.close()
 		else:
-			if sel == str(flashTmp):
+			if sel == str(self.tmpPath):
 				self.Start_Flashing()
 			else:
-				self.unzip_image(self.filename, flashPath)
+				self.unzip_image(self.filename, self.flashPath)
 
 	def ImageDownloadCB(self, ret):
 		if ret:
@@ -273,8 +278,8 @@ class doFlashImage(Screen):
 
 	def askUnzipCallBack(self, ret):
 		if ret:
-			print "[Flash Online] self.filename = %s, path = %s" %(self.filename, flashPath)
-			self.unzip_image(self.filename, flashPath)
+			print "[Flash Online] self.filename = %s, path = %s" %(self.filename, self.flashPath)
+			self.unzip_image(self.filename, self.flashPath)
 		else:
 			self.show()
 
@@ -284,15 +289,15 @@ class doFlashImage(Screen):
 		self.session.openWithCallback(self.cmdFinished, Console, title = _("Unzipping files, Please wait ..."), cmdlist = ['unzip ' + filename + ' -o -d ' + path, "sleep 3"], closeOnSuccess = True)
 
 	def cmdFinished(self):
-		self.prepair_flashtmp(flashPath)
+		self.prepair_tmpPath(self.flashPath)
 		self.Start_Flashing()
 
 	def Start_Flashing(self):
 		cmdlist = []
 		text = _("Flashing: ")
 		text += _("root and kernel")
-		print "[Flash Online cmdlist] multi = %s, flashtmp = %s" %(self.multi, flashTmp)
-		cmdlist.append("%s -r -k -m%s %s > /dev/null 2>&1" % (ofgwritePath, self.multi, flashTmp))
+		print "[Flash Online cmdlist] multi = %s, tmpPath = %s" %(self.multi, self.tmpPath)
+		cmdlist.append("%s -r -k -m%s %s > /dev/null 2>&1" % (ofgwritePath, self.multi, self.tmpPath))
 		message = "echo -e '\n"
 		message += _('ofgwrite will stop enigma2 now to run the flash for STARTUP_%s.\n' %self.multi)
 		message += _('Your STB will freeze during the flashing process.\n')
@@ -303,40 +308,35 @@ class doFlashImage(Screen):
 		self.session.open(Console, title = text, cmdlist = cmdlist, finishedCallback = self.CopyStartup, closeOnSuccess = False)
 		fbClass.getInstance().lock()
 
-	def CopyStartup(self, result, retval, extra_args=None):
-		print "FlashImage-3 Flash retval %s result %s Image STARTUP_%s " % (retval, result, self.multinew)
+	def CopyStartup(self):
 		fbClass.getInstance().unlock()
-		if retval == 0:
-			for media in ['/media/%s' % x for x in os.listdir('/media') if x.startswith('mmc')]:
-				if 'STARTUP' in os.listdir(media):
-					os.system("cp -f 'media/STARTUP_%s' media/STARTUP" %self.multinew)
-					break
-			self.session.open(TryQuitMainloop, 2)
-		else:
-			self.session.open(MessageBox, _("Image Flash failed - note: ViX Backup not restorable, only image from feeds"), MessageBox.TYPE_INFO, timeout=10, enable_input=False)			
-			self.close()
+		for media in ['/media/%s' % x for x in os.listdir('/media') if x.startswith('mmc')]:
+			if 'STARTUP' in os.listdir(media):
+				os.system("cp -f '%s/STARTUP_%s' '%s/STARTUP'" %(media, self.multi, media))
+				break
+		self.session.open(TryQuitMainloop, 2)
 
 
-	def prepair_flashtmp(self, tmpPath):
-		if os.path.exists(flashTmp):
-			flashTmpold = flashTmp + 'old'
-			os.system('mv %s %s' %(flashTmp, flashTmpold))
-			os.system('rm -rf %s' %flashTmpold)
-		if not os.path.exists(flashTmp):
-			os.mkdir(flashTmp)
+	def prepair_tmpPath(self, flashPath):
+		if os.path.exists(self.tmpPath):
+			tmpPathold = self.tmpPath + 'old'
+			os.system('mv %s %s' %(self.tmpPath, tmpPathold))
+			os.system('rm -rf %s' %tmpPathold)
+		if not os.path.exists(self.tmpPath):
+			os.mkdir(self.tmpPath)
 		kernel = True
 		rootfs = True
 		
-		for path, subdirs, files in os.walk(tmpPath):
+		for path, subdirs, files in os.walk(flashPath):
 			for name in files:
 				if name.find('kernel') > -1 and name.endswith('.bin') and kernel:
 					binfile = os.path.join(path, name)
-					dest = flashTmp + '/kernel.bin' 
+					dest = self.tmpPath + '/kernel.bin' 
 					shutil.copyfile(binfile, dest)
 					kernel = False
 				elif name.find('root') > -1 and (name.endswith('.bin') or name.endswith('.jffs2') or name.endswith('.bz2')) and rootfs:
 					binfile = os.path.join(path, name)
-					dest = flashTmp + '/rootfs.tar.bz2'
+					dest = self.tmpPath + '/rootfs.tar.bz2'
 					shutil.copyfile(binfile, dest)
 					rootfs = False
 
@@ -351,13 +351,13 @@ class doFlashImage(Screen):
 			if strPath[-1] == '/':
 				strPath = strPath[:-1]
 			self.imagePath = strPath
-			if os.path.exists(flashTmp):
-				os.system('rm -rf ' + flashTmp)
-			os.mkdir(flashTmp)
+			if os.path.exists(self.tmpPath):
+				os.system('rm -rf ' + self.tmpPath)
+			os.mkdir(self.tmpPath)
 			if binorzip == 0:
 				for files in os.listdir(self.imagePath):
 					if files.endswith(".bin") or files.endswith('.jffs2') or files.endswith('.img'):
-						self.prepair_flashtmp(strPath)
+						self.prepair_tmpPath(strPath)
 						break
 				self.Start_Flashing()
 			elif binorzip == 1:
@@ -365,7 +365,7 @@ class doFlashImage(Screen):
 			else:
 				self.layoutFinished()
 		else:
-			self.imagePath = imagePath
+			self.imagePath = self.imagePath
 
 	def layoutFinished(self):
 		if SystemInfo["canMultiBootHD"]:
@@ -400,10 +400,10 @@ class doFlashImage(Screen):
 				if name.endswith(".zip"): # and name.find(box) > 1:
 					self.imagelist.append(name)
 			self.imagelist.sort()
-			if os.path.exists(flashTmp):
-				for file in os.listdir(flashTmp):
+			if os.path.exists(tmpPath):
+				for file in os.listdir(tmpPath):
 					if file.find(".bin") > -1:
-						self.imagelist.insert( 0, str(flashTmp))
+						self.imagelist.insert( 0, str(tmpPath))
 						break
 
 		self["imageList"].l.setList(self.imagelist)

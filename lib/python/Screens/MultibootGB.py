@@ -41,6 +41,7 @@ class MultiBootStartup(ConfigListScreen, Screen):
 		self.title = " " 
 		self.getImageList = None
 		self.selection = 0
+		self.maxslotGB = 3
 		self.list = self.list_files("/media/mmc")
 		self.startit()
 
@@ -60,16 +61,19 @@ class MultiBootStartup(ConfigListScreen, Screen):
 		self.setTitle(self.title)
 
 	def startit(self):
-		self.getImageList = GetImagelist(self.startup)
+		if len(self.list) <= self.maxslotGB:
+			self.getImageList = GetImagelist(self.startup)
+		else:
+			StartUPbox = self.session.openWithCallback(self.restart,MessageBox,_("STARTUP's in media/mmc is %s and exceeds Giga4K max, ignore or exit)" %(len[self.list]), MessageBox.TYPE_YESNO)
+			
 
 	def startup(self, imagedict):
 		x = self.selection + 1
 #		print "Multiboot OldImage %s NewFlash %s FlashType %s" % (self.multiold, self.selection, x)
 		self["config"].setText(_("Current Image: STARTUP_%s \n Reboot STARTUP_%s: %s\n Use cursor keys < > to change Image\n Press Green button to reboot selected Image.") %(self.multiold, x, imagedict[x]['imagename']))
 
-
 	def save(self):
-		system("cp -f /media/mmc/%s /media/mmc/STARTUP"%self.list[self.selection])
+		system("cp -f /media/mmc/%s /media/mmc/STARTUP" %self.list[self.selection])
 		restartbox = self.session.openWithCallback(self.restartBOX,MessageBox,_("Image %s chosen for reboot now(Yes) or later manual restart(No)"%self.list[self.selection]), MessageBox.TYPE_YESNO)
 
 	def cancel(self):
@@ -102,6 +106,12 @@ class MultiBootStartup(ConfigListScreen, Screen):
 				if not name == "STARTUP":
 					files.append(name)
 		return files
+
+	def restart(self, answer):
+		if answer is True:
+			self.getImageList = GetImagelist(self.startup)
+		else:
+			self.close()	
 
 	def restartBOX(self, answer):
 		if answer is True:
