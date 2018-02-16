@@ -61,11 +61,7 @@ class MultiBootStartup(ConfigListScreen, Screen):
 		self.setTitle(self.title)
 
 	def startit(self):
-		if len(self.list) <= self.maxslotGB:
-			self.getImageList = GetImagelist(self.startup)
-		else:
-			StartUPbox = self.session.openWithCallback(self.restart,MessageBox,_("STARTUP's in media/mmc is %s and exceeds Giga4K max, ignore or exit)" %(len[self.list]), MessageBox.TYPE_YESNO)
-			
+		self.getImageList = GetImagelist(self.startup)
 
 	def startup(self, imagedict):
 		x = self.selection + 1
@@ -105,7 +101,11 @@ class MultiBootStartup(ConfigListScreen, Screen):
 			if path.isfile(path.join(self.path, name)):
 				if not name == "STARTUP":
 					files.append(name)
-		return files
+		if len(files) <= self.maxslotGB:
+			return files
+		else:
+			self.list = files
+			StartUPbox = self.session.openWithCallback(self.restart,MessageBox,_("STARTUP's in media/mmc is %s and exceeds Giga4K max, ignore or exit" %len[self.list]), MessageBox.TYPE_YESNO)
 
 	def restart(self, answer):
 		if answer is True:
