@@ -33,6 +33,7 @@ class MultiBootStartup(ConfigListScreen, Screen):
 		self["key_green"] = StaticText(_("ReBoot"))
 		self["config"] = StaticText(_("Select Image: STARTUP_1"))
 		self.mulitold = 0
+		self.images = []
 		self.read_startup()
 		self.title = " " 
 		self.getImageList = None
@@ -57,17 +58,23 @@ class MultiBootStartup(ConfigListScreen, Screen):
 		self.setTitle(self.title)
 
 	def startit(self):
-		self.getImageList = GetImagelist(self.startup)
+		self.getImageList = GetImagelist(self.startup0)
 
-	def startup(self, imagedict):
+	def startup0(self, imagedict):
+		self.images = imagedict
+		self.startup()
+
+	def startup(self):
 		x = self.selection + 1
-#		print "Multiboot OldImage %s NewFlash %s FlashType %s" % (self.multiold, self.selection, x)
-		self["config"].setText(_("Current Image: STARTUP_%s \n Reboot STARTUP_%s: %s\n Use cursor keys < > to change Image\n Press Green button to reboot selected Image.") %(self.multiold, x, imagedict[x]['imagename']))
+		self["config"].setText(_("Current Image: STARTUP_%s \n Reboot STARTUP_%s: %s\n Use cursor keys < > to change Image\n Press Green button to reboot selected Image.") %(self.multiold, x, self.images[x]['imagename']))
 
 	def save(self):
-		for media in ['/media/%s' % x for x in os.listdir('/media') if x.startswith('mmc')]:
-			if 'STARTUP' in os.listdir(media):
-				os.system("cp -f '%s/STARTUP_%s' '%s/STARTUP'" %(media, self.list[self.selection], media))
+		for media in ['/media/%s' % x for x in listdir('/media') if x.startswith('mmc')]:
+			if 'STARTUP' in listdir(media):
+				x = self.selection + 1
+				path1 = "%s/STARTUP_%s" %(media, x)
+				path2 = "%s/STARTUP" %media
+				system("cp -f '%s' '%s'" %(path1, path2))
 				break
 		restartbox = self.session.openWithCallback(self.restartBOX,MessageBox,_("Image %s chosen for reboot now(Yes) or later manual restart(No)"%self.list[self.selection]), MessageBox.TYPE_YESNO)
 
@@ -78,17 +85,17 @@ class MultiBootStartup(ConfigListScreen, Screen):
 		self.selection = self.selection - 1
 		if self.selection == -1:
 			self.selection = len(self.list) - 1
-		self.startit()
+		self.startup()
 
 	def right(self):
 		self.selection = self.selection + 1
 		if self.selection == len(self.list):
 			self.selection = 0
-		self.startit()
+		self.startup()
 
 	def read_startup(self):
-		for media in ['/media/%s' % x for x in os.listdir('/media') if x.startswith('mmc')]:
-			if 'STARTUP' in os.listdir(media):
+		for media in ['/media/%s' % x for x in listdir('/media') if x.startswith('mmc')]:
+			if 'STARTUP' in listdir(media):
 				f = open('%s/%s' % (media, 'STARTUP'), 'r')
 				f.seek(22)
 				self.multiold = f.read(1) 
@@ -96,9 +103,13 @@ class MultiBootStartup(ConfigListScreen, Screen):
 				break
 
 	def list_files(self):
-		for media in ['/media/%s' % x for x in os.listdir('/media') if x.startswith('mmc')]:
-			if not name == "STARTUP":
-				files.append(name)
+		files = []
+		for media in ['/media/%s' % x for x in listdir('/media') if x.startswith('mmc')]:
+				if 'STARTUP' in listdir(media):
+					for name in listdir(media):
+						if not name == "STARTUP":
+							files.append(name)
+					break
 		return files
 
 
