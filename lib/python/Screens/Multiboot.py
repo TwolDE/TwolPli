@@ -14,7 +14,7 @@ from os import path, listdir, system
 class MultiBootStartup(ConfigListScreen, Screen):
 
 	skin = """
-	<screen name="MultiBootStartup" position="center,center" size="500,200"  flags="wfNoBorder" title="ReBootGB" backgroundColor="transparent">
+	<screen name="MultiBootStartup" position="center,center" size="500,200"  flags="wfNoBorder" title="ImageChange" backgroundColor="transparent">
 		<eLabel name="b" position="0,0" size="500,200" backgroundColor="#00ffffff" zPosition="-2" />
 		<eLabel name="a" position="1,1" size="498,198" backgroundColor="#00000000" zPosition="-1" />
 		<widget source="Title" render="Label" position="10,10" foregroundColor="#00ffffff" size="480,50" halign="center" font="Regular; 28" backgroundColor="#00000000" />
