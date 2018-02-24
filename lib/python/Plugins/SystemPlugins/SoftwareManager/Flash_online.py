@@ -28,10 +28,8 @@ from Tools.HardwareInfo import HardwareInfo
 
 #############################################################################################################
 feedurl_ViX = 'http://192.168.0.171/openvix-builds' 
-imagePathGB = '/media/hdd/images'
-hddGB = "/media/hdd"
-imagePath = '/media/HD51HDD/images'
-hddHD = "/media/HD51HDD"
+imagePath = '/media/hdd/images'
+hdd = "/media/hdd"
 ofgwritePath = '/usr/bin/ofgwrite'
 #############################################################################################################
 
@@ -87,12 +85,8 @@ class FlashOnline(Screen):
 			"cancel": self.quit,
 		}, -2)
 	
-		if SystemInfo["canMultiBootGB"]:
-			self.hdd = hddGB
-			self.imagePath = imagePathGB
-		else:
-			self.hdd = hddHD
-			self.imagePath = imagePath
+		self.hdd = hdd
+		self.imagePath = imagePath
 		self.flashPath = (self.imagePath + "/" + "flash")
 		self.tmpPath = (self.imagePath + "/" + "tmp")
 		self.getImageList = GetImagelist(self.getImagelistCallback)		
@@ -110,7 +104,6 @@ class FlashOnline(Screen):
 		if Freespace(self.hdd) < 300000:
 			self.session.open(MessageBox, _("Not enough free space on /hdd !!\nYou need at least 300Mb free space.\n\nExit plugin."), type = MessageBox.TYPE_ERROR)
 			return False
-
 		if not os.path.exists(self.imagePath):
 			try:
 				os.mkdir(self.imagePath)
@@ -169,19 +162,15 @@ class doFlashImage(Screen):
 		Screen.__init__(self, session)
 		self.session = session
 
-		Screen.setTitle(self, _("Flash On the fly (select a image)"))
+		Screen.setTitle(self, _("Couch Flash (select a image)"))
 		self["key_red"] = StaticText(_("Exit"))
 		self["key_green"] = StaticText(_("Flash"))
 		self["key_yellow"] = StaticText("LocalHDD")
 		self["key_blue"] = StaticText("Delete")
 
 		self.filename = None
-		if SystemInfo["canMultiBootGB"]:
-			self.hdd = hddGB
-			self.imagePath = imagePathGB
-		else:
-			self.hdd = hddHD
-			self.imagePath = imagePath
+		self.hdd = hdd
+		self.imagePath = imagePath
 		self.flashPath = (self.imagePath + "/" + "flash")
 		self.tmpPath = (self.imagePath + "/" + "tmp")
 		self.imagelist = []
@@ -380,7 +369,7 @@ class doFlashImage(Screen):
 			self["key_blue"] = StaticText("")
 			self.feedurl = feedurl_ViX
 			from bs4 import BeautifulSoup
-			url = 'http://192.168.0.171/openvix-builds/'+self.boxtype+'/'
+			url = self.feedurl+'/'+self.boxtype+'/'
 			conn = urllib2.urlopen(url)
 			the_page = conn.read()
 
