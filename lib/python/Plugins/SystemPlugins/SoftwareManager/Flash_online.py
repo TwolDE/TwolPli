@@ -17,6 +17,7 @@ from Screens.HelpMenu import HelpableScreen
 from Screens.Standby import TryQuitMainloop
 from Screens.TaskView import JobView
 from Tools.Downloader import downloadWithProgress
+from Tools.HardwareInfo import HardwareInfo
 from Tools.Directories import fileExists, fileCheck
 from Tools.Multiboot import GetImagelist, GetCurrentImage, GetCurrentImageMode
 from enigma import fbClass
@@ -214,7 +215,7 @@ class doFlashImage(Screen):
 		if SystemInfo["canMultiBootHD"]:
 			box = "Mutant-HD51"
 		if SystemInfo["canMultiBootGB"]:
-			box = "gbquad4k"
+			box = HardwareInfo().get_device_model()
 		return box
 
 	def green(self, ret = None):
@@ -361,8 +362,8 @@ class doFlashImage(Screen):
 			self.boxtype = "Mutant-HD51"
 			self.model = "mutant51"
 		if SystemInfo["canMultiBootGB"]:
-			self.boxtype = "gbquad4k"
-			self.model = "gbquad4k"
+			self.boxtype = HardwareInfo().get_device_model()
+			self.model = HardwareInfo().get_device_model()
 		self.imagelist = []
 		if self.Online:
 			self["key_yellow"].setText("Flash")

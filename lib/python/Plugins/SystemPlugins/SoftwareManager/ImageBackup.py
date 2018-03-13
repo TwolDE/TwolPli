@@ -21,12 +21,12 @@ from Tools.Directories import fileExists, fileCheck
 from os import path, system, makedirs, listdir, walk, statvfs, remove
 import commands
 import datetime
-from boxbranding import getBoxType, getMachineBrand, getMachineName, getDriverDate, getImageVersion, getImageBuild, getBrandOEM, getMachineBuild, getImageFolder, getMachineUBINIZE, getMachineMKUBIFS, getMachineMtdKernel, getMachineMtdRoot, getMachineKernelFile, getMachineRootFile, getImageFileSystem, getMachineMake
+from Tools.HardwareInfo import HardwareInfo
 
 VERSION = "Version 5.2 openViX"
 
 HaveGZkernel = True
-if getMachineBuild() in ('h9','vuzero4k','u5','u5pvr','sf5008','et13000','et1x000',"vuuno4k","vuuno4kse", "vuultimo4k", "vusolo4k", "spark", "spark7162", "hd51", "hd52", "sf4008", "dags7252", "gb7252", "vs1500","h7",'xc7439','8100s'):
+if  HardwareInfo().get_device_model() in ('h9','vuzero4k','u5','u5pvr','sf5008','et13000','et1x000',"vuuno4k","vuuno4kse", "vuultimo4k", "vusolo4k", "spark", "spark7162", "hd51", "hd52", "sf4008", "dags7252", "gb7252", "gbquad4K", "gbue4k", "vs1500","h7",'xc7439','8100s'):
 	HaveGZkernel = False
 
 def Freespace(dev):
@@ -57,9 +57,9 @@ class ImageBackup(Screen):
 		self.selection = 0
 		self.MODEL = getBoxType()
 		self.OEM = getBrandOEM()
-		self.MACHINEBUILD = getMachineBuild()
+		self.MACHINEBUILD = HardwareInfo().get_device_model()
 		self.MACHINENAME = getMachineName()
-		self.MACHINEBRAND = getMachineBrand()
+		self.MACHINEBRAND = self.MACHINEBUILD
 		self.IMAGEFOLDER = getImageFolder()
 		self.UBINIZE_ARGS = getMachineUBINIZE()
 		self.MKUBIFS_ARGS = getMachineMKUBIFS()
