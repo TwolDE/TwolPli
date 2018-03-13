@@ -29,9 +29,9 @@ class ImportChannels():
 			print "[Import Channels] Get EPG Location"
 			try:
 				try:
-					files = [file for file in loads(urllib2.urlopen("%s/file?dir=/hdd" % self.url).read())["files"] if os.path.basename(file).startswith("epg.dat")]
+					files = [file for file in loads(urllib2.urlopen("%s/file?dir=/hdd" % self.url, timeout=5).read())["files"] if os.path.basename(file).startswith("epg.dat")]
 				except:
-					files = [file for file in loads(urllib2.urlopen("%s/file?dir=/" % self.url).read())["files"] if os.path.basename(file).startswith("epg.dat")] 
+					files = [file for file in loads(urllib2.urlopen("%s/file?dir=/" % self.url, timeout=5).read())["files"] if os.path.basename(file).startswith("epg.dat")]
 				epg_location = files[0] if files else None
 			except:
 				self.ImportChannelsDone(False, _("Error while retreiving location of epg.dat on server"))
@@ -51,7 +51,7 @@ class ImportChannels():
 				pass
 			print "[Import Channels] reading dir"
 			try:
-				files = [file for file in loads(urllib2.urlopen("%s/file?dir=/etc/enigma2" % self.url).read())["files"] if os.path.basename(file).startswith(settingfiles)]
+				files = [file for file in loads(urllib2.urlopen("%s/file?dir=/etc/enigma2" % self.url, timeout=5).read())["files"] if os.path.basename(file).startswith(settingfiles)]
 				count = 0
 				for file in files:
 					count += 1
