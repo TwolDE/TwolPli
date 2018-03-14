@@ -46,10 +46,10 @@ class MultiBootStartup(ConfigListScreen, Screen):
 		{
 			"left": self.left,
 			"right": self.right,
-			"green": self.save,
+			"green": self.reboot,
 			"red": self.cancel,
 			"cancel": self.cancel,
-			"ok": self.save,
+			"ok": self.reboot,
 		}, -2)
 
 		self.onLayoutFinish.append(self.layoutFinished)
@@ -68,7 +68,7 @@ class MultiBootStartup(ConfigListScreen, Screen):
 		x = self.selection + 1
 		self["config"].setText(_("Current Image: STARTUP_%s \n Reboot STARTUP_%s: %s\n Use cursor keys < > to change Image\n Press Green button to reboot selected Image.") %(self.multiold, x, self.images[x]['imagename']))
 
-	def save(self):
+	def reboot(self):
 		for media in ['/media/%s' % x for x in listdir('/media') if x.startswith('mmc')]:
 			if 'STARTUP' in listdir(media):
 				x = self.selection + 1
