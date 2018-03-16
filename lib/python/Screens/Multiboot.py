@@ -32,14 +32,13 @@ class MultiBootStartup(ConfigListScreen, Screen):
 		self["key_red"] = StaticText(_("Cancel"))
 		self["key_green"] = StaticText(_("ReBoot"))
 		self["config"] = StaticText(_("Select Image: STARTUP_1"))
-		self.mulitold = 0
+		self.title = "OpenPLi Multiboot Selector " 
+		self.multiold = 0
 		self.images = []
-		self.read_startup()
-		self.title = " " 
+		self.STARTUPmedia = "/media/mmc"
 		self.getImageList = None
 		self.selection = 0
-		self.maxslotGB = 3
-		self.list = self.list_files()
+		self.list = self.list_STARTUPfiles()
 		self.startit()
 
 		self["actions"] = ActionMap(["WizardActions", "SetupActions", "ColorActions"],
@@ -69,13 +68,8 @@ class MultiBootStartup(ConfigListScreen, Screen):
 		self["config"].setText(_("Current Image: STARTUP_%s \n Reboot STARTUP_%s: %s\n Use cursor keys < > to change Image\n Press Green button to reboot selected Image.") %(self.multiold, x, self.images[x]['imagename']))
 
 	def reboot(self):
-		for media in ['/media/%s' % x for x in listdir('/media') if x.startswith('mmc')]:
-			if 'STARTUP' in listdir(media):
-				x = self.selection + 1
-				path1 = "%s/STARTUP_%s" %(media, x)
-				path2 = "%s/STARTUP" %media
-				system("cp -f '%s' '%s'" %(path1, path2))
-				break
+		x = self.selection + 1
+		system("cp -f '%s/STARTUP_%s' '%s/STARTUP'" %(self.STARTUPmedia, x, self.STARTUPmedia))
 		restartbox = self.session.openWithCallback(self.restartBOX,MessageBox,_("Image %s chosen for reboot now(Yes) or later manual restart(No)"%self.list[self.selection]), MessageBox.TYPE_YESNO)
 
 	def cancel(self):
@@ -93,23 +87,19 @@ class MultiBootStartup(ConfigListScreen, Screen):
 			self.selection = 0
 		self.startup()
 
-	def read_startup(self):
-		for media in ['/media/%s' % x for x in listdir('/media') if x.startswith('mmc')]:
-			if 'STARTUP' in listdir(media):
-				f = open('%s/%s' % (media, 'STARTUP'), 'r')
-				f.seek(22)
-				self.multiold = f.read(1) 
-				f.close()
-				break
-
-	def list_files(self):
+	def list_STARTUPfiles(self):
 		files = []
 		for media in ['/media/%s' % x for x in listdir('/media') if x.startswith('mmc')]:
 				if 'STARTUP' in listdir(media):
-					for name in listdir(media):
-						if not name == "STARTUP":
-							files.append(name)
-					break
+						for name in listdir(media):
+							if not name == "STARTUP":
+								files.append(name)
+						break
+		self.STARTUPmedia = media
+		f = open('%s/%s' % (media, 'STARTUP'), 'r')
+		f.seek(22)
+		self.multiold = f.read(1) 
+		f.close()
 		return files
 
 
