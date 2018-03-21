@@ -10,11 +10,11 @@ settingfiles = ('lamedb', 'bouquets.', 'userbouquet.', 'blacklist', 'whitelist',
 class ImportChannels():
 	
 	def __init__(self):
-		if config.usage.remote_fallback_import.value and config.usage.remote_fallback.value:
-			if "ChannelsImport" in [x.name for x in threading.enumerate()]:
-				self.ImportChannelsDone(False, "ChannelsImport already running")
-			else:
-				self.url = config.usage.remote_fallback.value.rsplit(":", 1)[0]
+		if config.usage.remote_fallback_import.value and config.usage.remote_fallback.value and not "ChannelsImport" in [x.name for x in threading.enumerate()]:
+				if config.usage.remote_fallback_enabled.value and config.usage.remote_fallback_import.value and config.usage.remote_fallback_import_seperate.value and config.usage.remote_fallback_import_url.value:
+					self.url = config.usage.remote_fallback_import_url.value.rsplit(":", 1)[0]
+				else:
+					self.url = config.usage.remote_fallback.value.rsplit(":", 1)[0]
 				self.thread = threading.Thread(target=self.threaded_function, name="ChannelsImport")
 				self.thread.start()
 
