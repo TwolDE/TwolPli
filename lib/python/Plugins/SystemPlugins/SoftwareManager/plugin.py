@@ -36,7 +36,8 @@ from twisted.web import client
 from ImageWizard import ImageWizard
 from BackupRestore import BackupSelection, RestoreMenu, BackupScreen, RestoreScreen, getBackupPath, getBackupFilename
 from SoftwareTools import iSoftwareTools
-# from ImageBackup import ImageBackup
+#from IPTVcreate import IPTVcreate
+from ImageBackup import ImageBackup
 from Flash_online import FlashOnline
 
 config.plugins.configurationbackup = ConfigSubsection()
@@ -124,7 +125,8 @@ class UpdatePluginMenu(Screen):
 			self.list.append(("software-update", _("Software update"), _("\nOnline update of your receiver software." ) + self.oktext, None))
 			self.list.append(("software-restore", _("Software restore"), _("\nRestore your receiver with a new firmware." ) + self.oktext, None))
 			self.list.append(("flash-online", _("Flash Online"), _("\nFlash Image on the fly") + self.oktext, None))
-#			self.list.append(("backup-image", _("Backup Image"), _("\nBackup your running image to HDD or USB.") + self.oktext, None))
+#			self.list.append(("IPTV-manager", _("IPTV Bouquet manager"), _("Manage your IPTV Bouquets") + self.oktext, None))
+			self.list.append(("backup-image", _("Backup Image"), _("\nBackup your running image to HDD or USB.") + self.oktext, None))
 			self.list.append(("system-backup", _("Backup system settings"), _("\nBackup your receiver settings." ) + self.oktext + "\n\n" + self.infotext, None))
 			self.list.append(("system-restore",_("Restore system settings"), _("\nRestore your receiver settings." ) + self.oktext, None))
 			self.list.append(("ipkg-install", _("Install local extension"),  _("\nScan for local extensions and install them." ) + self.oktext, None))
@@ -254,8 +256,10 @@ class UpdatePluginMenu(Screen):
 					self.session.open(UpdatePlugin, self.skin_path)
 				elif (currentEntry == "flash-online"):
 					self.session.open(FlashOnline)
-#				elif (currentEntry == "backup-image"):
-#					self.session.open(ImageBackup)
+#				elif currentEntry == "IPTV-manager":
+#					self.session.open(IPTVcreate)
+				elif (currentEntry == "backup-image"):
+					self.session.open(ImageBackup)
 				elif (currentEntry == "software-restore"):
 					self.session.open(ImageWizard)
 				elif (currentEntry == "install-extensions"):
