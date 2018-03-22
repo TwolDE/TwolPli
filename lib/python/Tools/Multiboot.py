@@ -9,6 +9,12 @@ def GetCurrentImageMode():
 	return SystemInfo["canMultiBootHD"] and int(open('/sys/firmware/devicetree/base/chosen/bootargs', 'r').read().replace('\0', '').split('=')[-1])
 
 
+def GetcurrentImageGB():
+	x = open('/sys/firmware/devicetree/base/chosen/bootargs', 'r').read().replace('\0', '').split('=')[1]
+	x = x.split('p')[1]
+	f = int(x.split(' ')[0])
+	return (f-3)/2
+
 #		#default layout for Mut@nt HD51	& Giga4K								for GigaBlue 4K
 # STARTUP_1 			Image 1: boot emmcflash0.kernel1 'root=/dev/mmcblk0p3 rw rootwait'	boot emmcflash0.kernel1: 'root=/dev/mmcblk0p5 
 # STARTUP_2 			Image 2: boot emmcflash0.kernel2 'root=/dev/mmcblk0p5 rw rootwait'      boot emmcflash0.kernel2: 'root=/dev/mmcblk0p7
