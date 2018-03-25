@@ -8,7 +8,7 @@ from Components.ConfigList import ConfigListScreen
 from Components.Label import Label
 from Components import Harddisk
 from Components.SystemInfo import SystemInfo
-from Tools.Multiboot import GetImagelist
+from Tools.Multiboot import GetImagelist, GetCurrentImage
 from os import path, listdir, system
 
 class MultiBootStartup(ConfigListScreen, Screen):
@@ -18,8 +18,8 @@ class MultiBootStartup(ConfigListScreen, Screen):
 		<eLabel name="b" position="0,0" size="500,200" backgroundColor="#00ffffff" zPosition="-2" />
 		<eLabel name="a" position="1,1" size="498,198" backgroundColor="#00000000" zPosition="-1" />
 		<widget source="Title" render="Label" position="10,10" foregroundColor="#00ffffff" size="480,50" halign="center" font="Regular; 28" backgroundColor="#00000000" />
-		<eLabel name="line" position="1,69" size="498,1" backgroundColor="#00ffffff" zPosition="1" />
-		<widget source="config" render="Label" position="10,90" size="480,60" halign="center" font="Regular; 24" backgroundColor="#00000000" foregroundColor="#00ffffff" />
+		<eLabel name="line" position="1,60" size="498,1" backgroundColor="#00ffffff" zPosition="1" />
+		<widget source="config" render="Label" position="2,70" size="480,60" halign="center" font="Regular; 22" backgroundColor="#00000000" foregroundColor="#00ffffff" />
 		<widget source="key_red" render="Label" position="35,162" size="170,30" noWrap="1" zPosition="1" valign="center" font="Regular; 20" halign="left" backgroundColor="#00000000" foregroundColor="#00ffffff" />
 		<widget source="key_green" render="Label" position="228,162" size="170,30" noWrap="1" zPosition="1" valign="center" font="Regular; 20" halign="left" backgroundColor="#00000000" foregroundColor="#00ffffff" />
 		<eLabel position="25,159" size="6,40" backgroundColor="#00e61700" />
@@ -32,12 +32,13 @@ class MultiBootStartup(ConfigListScreen, Screen):
 		self["key_red"] = StaticText(_("Cancel"))
 		self["key_green"] = StaticText(_("ReBoot"))
 		self["config"] = StaticText(_("Select Image: STARTUP_1"))
-		self.title = "OpenPLi Multiboot Selector " 
-		self.multiold = 0
+		self.STARTUPslot = 0
 		self.images = []
-		self.STARTUPmedia = "/media/mmc"
+		self.STARTUPslot = GetCurrentImage()
+		self.title = " " 
 		self.getImageList = None
 		self.selection = 0
+		self.STARTUPmedia = "/media/mmc"
 		self.list = self.list_STARTUPfiles()
 		self.startit()
 
@@ -65,7 +66,9 @@ class MultiBootStartup(ConfigListScreen, Screen):
 
 	def startup(self):
 		x = self.selection + 1
-		self["config"].setText(_("Current Image: STARTUP_%s \n Reboot STARTUP_%s: %s\n Use cursor keys < > to change Image\n Press Green button to reboot selected Image.") %(self.multiold, x, self.images[x]['imagename']))
+		self.title = "Current Image: STARTUP_%s" %self.STARTUPslot
+#		self["config"].setText(_("Reboot Image: STARTUP_%s: %s\n Use < > keys to select Image and then ReBoot.") %(x, self.images[x]['imagename']))
+
 
 	def reboot(self):
 		x = self.selection + 1
@@ -96,18 +99,7 @@ class MultiBootStartup(ConfigListScreen, Screen):
 								files.append(name)
 						break
 		self.STARTUPmedia = media
-		f = open('%s/%s' % (media, 'STARTUP'), 'r')
-		f.seek(22)
-		self.multiold = f.read(1) 
-		f.close()
 		return files
-
-
-	def restart(self, answer):
-		if answer is True:
-			self.getImageList = GetImagelist(self.startup)
-		else:
-			self.close()	
 
 	def restartBOX(self, answer):
 		if answer is True:
