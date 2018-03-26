@@ -8,11 +8,13 @@ from Components.NimManager import nimmanager
 from Components.About import about
 from Components.ScrollLabel import ScrollLabel
 from Components.Button import Button
+from Components.SystemInfo import SystemInfo
 
 from Components.Label import Label
 from Components.ProgressBar import ProgressBar
 
 from Tools.StbHardware import getFPVersion
+from Tools.Multiboot import GetCurrentImage
 from enigma import eTimer, eLabel, eConsoleAppContainer
 
 from Components.GUIComponent import GUIComponent
@@ -27,6 +29,8 @@ class About(Screen):
 		AboutText = _("Hardware: ") + about.getHardwareTypeString() + "\n"
 		AboutText += _("CPU: ") + about.getCPUInfoString() + "\n"
 		AboutText += _("Image: ") + about.getImageTypeString() + "\n"
+		if SystemInfo["canMultiBoot"]:
+			AboutText += _("STARTUP slot: ") + str(GetCurrentImage()) + "\n"
 		AboutText += _("Build date: ") + about.getBuildDateString() + "\n"
 
 		# [WanWizard] Removed until we find a reliable way to determine the installation date
