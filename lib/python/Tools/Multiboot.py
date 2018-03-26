@@ -10,6 +10,8 @@ def GetCurrentImage():
 		x = x.split('p')[1]
 		f = int(x.split(' ')[0])
 		return (f-3)/2
+	else:
+		return	0
 
 def GetCurrentImageMode():
 	return SystemInfo["canMultiBootHD"] and int(open('/sys/firmware/devicetree/base/chosen/bootargs', 'r').read().replace('\0', '').split('=')[-1])
