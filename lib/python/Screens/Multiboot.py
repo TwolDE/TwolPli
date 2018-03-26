@@ -67,7 +67,7 @@ class MultiBootStartup(ConfigListScreen, Screen):
 	def startup(self):
 		x = self.selection + 1
 		self.title = "Current Image: STARTUP_%s" %self.STARTUPslot
-#		self["config"].setText(_("Reboot Image: STARTUP_%s: %s\n Use < > keys to select Image and then ReBoot.") %(x, self.images[x]['imagename']))
+		self["config"].setText(_("Reboot Image: STARTUP_%s: %s\n Use < > keys to select Image and then ReBoot.") %(x, self.images[x]['imagename']))
 
 
 	def reboot(self):
