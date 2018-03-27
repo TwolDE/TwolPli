@@ -17,7 +17,7 @@ class MultiBootStartup(ConfigListScreen, Screen):
 	<screen name="MultiBootStartup" position="center,center" size="500,200"  flags="wfNoBorder" title="ImageChange" backgroundColor="transparent">
 		<eLabel name="b" position="0,0" size="500,200" backgroundColor="#00ffffff" zPosition="-2" />
 		<eLabel name="a" position="1,1" size="498,198" backgroundColor="#00000000" zPosition="-1" />
-		<widget source="Title" render="Label" position="10,10" foregroundColor="#00ffffff" size="480,50" halign="center" font="Regular; 28" backgroundColor="#00000000" />
+		<widget source="Title" render="Label" position="10,10" foregroundColor="#00ffffff" size="480,50" halign="center" font="Regular; 22" backgroundColor="#00000000" />
 		<eLabel name="line" position="1,60" size="498,1" backgroundColor="#00ffffff" zPosition="1" />
 		<widget source="config" render="Label" position="2,70" size="480,60" halign="center" font="Regular; 22" backgroundColor="#00000000" foregroundColor="#00ffffff" />
 		<widget source="key_red" render="Label" position="35,162" size="170,30" noWrap="1" zPosition="1" valign="center" font="Regular; 20" halign="left" backgroundColor="#00000000" foregroundColor="#00ffffff" />
