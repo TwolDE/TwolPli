@@ -12,6 +12,8 @@ class ConfigList(GUIComponent, object):
 		self.l = eListboxPythonConfigContent()
 		seperation = skin.parameters.get("ConfigListSeperator", 200)
 		self.l.setSeperation(seperation)
+		y_offset, space = skin.parameters.get("ConfigListSlider",(4, 0))
+		self.l.setSlider(y_offset, space)
 		self.timer = eTimer()
 		self.list = list
 		self.onSelectionChanged = [ ]
@@ -193,7 +195,7 @@ class ConfigListScreen:
 					self["VirtualKB"].setEnabled(True)
 					self["VKeyIcon"].boolean = True
 				if "HelpWindow" in self:
-					if self["config"].getCurrent()[1].help_window.instance is not None:
+					if self["config"].getCurrent()[1].help_window and self["config"].getCurrent()[1].help_window.instance is not None:
 						helpwindowpos = self["HelpWindow"].getPosition()
 						from enigma import ePoint
 						self["config"].getCurrent()[1].help_window.instance.move(ePoint(helpwindowpos[0],helpwindowpos[1]))
