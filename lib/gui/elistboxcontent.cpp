@@ -475,19 +475,11 @@ void eListboxPythonConfigContent::paint(gPainter &painter, eWindowStyle &style, 
 							painter.line(tr, br);
 							painter.line(br, bl);
 							painter.line(bl, tl);
-<<<<<<< HEAD
-							painter.fill(eRect(offset.x() + m_seperation + m_slider_space + 1, offset.y() + m_slider_yoffset + m_slider_space + 1, width - 2*(m_slider_space + 1), height - 2*(m_slider_yoffset + m_slider_space + 1)));
-						}
-						else
-						{
-							painter.fill(eRect(offset.x() + m_seperation, offset.y() + m_slider_yoffset, width, height - 2*m_slider_yoffset));
-=======
 							painter.fill(eRect(offset.x() + m_seperation + m_slider_space + 1, offset.y() + slider_y_offset, width - 2*(m_slider_space + 1), m_slider_height));
 						}
 						else
 						{
 							painter.fill(eRect(offset.x() + m_seperation, offset.y() + slider_y_offset, width, m_slider_height));
->>>>>>> upstream/develop
 						}
 
 							/* pvalue is borrowed */
