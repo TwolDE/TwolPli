@@ -92,4 +92,4 @@ SystemInfo["canFlashWithOfgwrite"] = not HardwareInfo().get_device_model().start
 SystemInfo["canMultiBoot"] = HardwareInfo().get_device_model() in ('hd51', 'h7', 'vs1500', 'gbue4k', 'gbquad4k')
 SystemInfo["canMultiBootHD"] = HardwareInfo().get_device_model() in ('hd51', 'h7', 'vs1500')
 SystemInfo["canMultiBootGB"] = HardwareInfo().get_device_model() in ('gbue4k', 'gbquad4k')
-SystemInfo["canMode12"] = SystemInfo["canMultiBoot"] and '200M' if HardwareInfo().get_device_model() == "h7" else '192M'
+SystemInfo["canMode12"] = SystemInfo["canMultiBootHD"] and '200M' if HardwareInfo().get_device_model() == "h7" else SystemInfo["canMultiBootHD"] and '192M'

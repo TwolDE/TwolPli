@@ -60,7 +60,8 @@ class SelectImage(Screen):
 	def getImagesList(self):
 
 		def getImages(path, files):
-			for file in [x for x in files if x.endswith('.zip') and model in x]:
+#			for file in [x for x in files if x.endswith('.zip') and model in x]:
+			for file in [x for x in files if x.endswith('.zip')]:
 				try:
 					if checkimagefiles([x.split(os.sep)[-1] for x in zipfile.ZipFile(file).namelist()]):
 						medium = path.split(os.sep)[-1]
@@ -83,8 +84,8 @@ class SelectImage(Screen):
 			for media in getNonNetworkMediaMounts():
 				if not(SystemInfo['HasMMC'] and "/mmc" in media):
 					getImages(media, ["%s/%s" % (media, x) for x in os.listdir(media) if x.endswith('.zip') and model in x])
-					if "downloaded_images" in os.listdir(media):
-						media = "%s/downloaded_images" % media
+					if "imagebackups" in os.listdir(media):
+						media = "%s/imagebackups" % media
 						if os.path.isdir(media) and not os.path.islink(media) and not os.path.ismount(media):
 							getImages(media, ["%s/%s" % (media, x) for x in os.listdir(media) if x.endswith('.zip') and model in x])
 
@@ -219,11 +220,8 @@ class FlashImage(Screen):
 			else:
 				choices.append((_("slot%s - empty, with backup") % x, (x, "with backup")))
 		choices.append((_("No, do not flash image"), False))
-		for x in range(1,5):
-			if x in imagedict:
-				choices.append(((_("slot%s - %s (current image), without backup") if x == currentimageslot else _("slot%s - %s, without backup")) % (x, imagedict[x]['imagename']), (x, "without backup")))
-			else:
-				choices.append((_("slot%s - empty, without backup") % x, (x, "without backup")))
+		for x in range(1,HIslot):
+			choices.append(((_("slot%s - %s (current image), without backup") if x == currentimageslot else _("slot%s - %s, without backup")) % (x, imagedict[x]['imagename']), (x, "without backup")))
 		self.session.openWithCallback(self.backupsettings, MessageBox, self.message, list=choices, default=currentimageslot, simple=True)
 
 	def backupsettings(self, retval):
@@ -407,7 +405,9 @@ class MultibootSelection(SelectImage):
 		slot = currentSelected[0][1]
 		if currentSelected[0][1] != "Waiter":
 			model = HardwareInfo().get_device_model()
-			if slot < 12:
+			if SystemInfo["canMultiBootGB"]:
+				startupFileContents = "boot emmcflash0.kernel%s 'root=/dev/mmcblk0p%s rootwait rw rootflags=data=journal libata.force=1:3.0G,2:3.0G,3:3.0G coherent_poll=2M brcm_cma=764M@0x10000000 brcm_cma=1024M@0x80000000'\n" % (slot, slot * 2 + 3)
+			elif slot < 12:
 				startupFileContents = "boot emmcflash0.kernel%s 'root=/dev/mmcblk0p%s rw rootwait %s_4.boxmode=1'\n" % (slot, slot * 2 + 1, model)
 			else:
 				slot -= 12
