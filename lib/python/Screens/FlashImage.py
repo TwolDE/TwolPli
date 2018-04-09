@@ -214,11 +214,9 @@ class FlashImage(Screen):
 		self.getImageList = None
 		choices = []
 		currentimageslot = GetCurrentImage()
-		for x in range(1,5):
-			if x in imagedict:
-				choices.append(((_("slot%s - %s (current image) with, backup") if x == currentimageslot else _("slot%s - %s, with backup")) % (x, imagedict[x]['imagename']), (x, "with backup")))
-			else:
-				choices.append((_("slot%s - empty, with backup") % x, (x, "with backup")))
+		HIslot = len(imagedict) + 1
+		for x in range(1,HIslot):
+			choices.append(((_("slot%s - %s (current image) with, backup") if x == currentimageslot else _("slot%s - %s, with backup")) % (x, imagedict[x]['imagename']), (x, "with backup")))
 		choices.append((_("No, do not flash image"), False))
 		for x in range(1,HIslot):
 			choices.append(((_("slot%s - %s (current image), without backup") if x == currentimageslot else _("slot%s - %s, without backup")) % (x, imagedict[x]['imagename']), (x, "without backup")))
