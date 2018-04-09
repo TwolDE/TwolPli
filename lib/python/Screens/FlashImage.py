@@ -250,7 +250,7 @@ class FlashImage(Screen):
 
 			if self.destination:
 
-				destination = "/".join([self.destination, 'downloaded_images'])
+				destination = "/".join([self.destination, 'imagebackups'])
 				self.zippedimage = "://" in self.source and "/".join([destination, self.imagename]) or self.source
 				self.unzippedimage = "/".join([destination, '%s.unzipped' % self.imagename[:-4]])
 
@@ -403,7 +403,7 @@ class MultibootSelection(SelectImage):
 		slot = currentSelected[0][1]
 		if currentSelected[0][1] != "Waiter":
 			model = HardwareInfo().get_device_model()
-			if SystemInfo["canMultiBootGB"]:
+			if SystemInfo["canMultiBoot"][0] == "GB":
 				startupFileContents = "boot emmcflash0.kernel%s 'root=/dev/mmcblk0p%s rootwait rw rootflags=data=journal libata.force=1:3.0G,2:3.0G,3:3.0G coherent_poll=2M brcm_cma=764M@0x10000000 brcm_cma=1024M@0x80000000'\n" % (slot, slot * 2 + 3)
 			elif slot < 12:
 				startupFileContents = "boot emmcflash0.kernel%s 'root=/dev/mmcblk0p%s rw rootwait %s_4.boxmode=1'\n" % (slot, slot * 2 + 1, model)
