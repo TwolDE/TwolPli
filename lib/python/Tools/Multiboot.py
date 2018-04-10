@@ -42,7 +42,6 @@ class GetImagelist():
 		self.container.ePopen('mount /dev/mmcblk0p%s /tmp/testmount' % str(self.slot * 2 + self.addin) if self.phase == self.MOUNT else 'umount /tmp/testmount', self.appClosed)
 			
 	def appClosed(self, data, retval, extra_args):
-		SlotEmpty = "Empty Slot"
 		if retval == 0 and self.phase == self.MOUNT:
 			BuildVersion = "  "
 			Build = " "
@@ -62,12 +61,12 @@ class GetImagelist():
 			if os.path.isfile("/tmp/testmount/usr/bin/enigma2"):
 				self.imagelist[self.slot] =  { 'imagename': open("/tmp/testmount/etc/issue").readlines()[-2].capitalize().strip()[:-6] + BuildVersion}
 			else:
-				self.imagelist[self.slot] =  { 'imagename': SlotEmpty}
+				self.imagelist[self.slot] = { 'imagename': _("Empty slot")}
 			self.phase = self.UNMOUNT
 			self.run()
 		elif self.slot < self.endslot:
 			self.slot += 1
-			self.imagelist[self.slot] =  { 'imagename': SlotEmpty}
+			self.imagelist[self.slot] = { 'imagename': _("Empty slot")}
 			self.phase = self.MOUNT
 			self.run()
 		else:
