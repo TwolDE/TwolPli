@@ -3,15 +3,15 @@ from Components.Console import Console
 import os
 
 def GetCurrentImage():
-	if SystemInfo["canMultiBoot"](0) == "HD":
+	if SystemInfo["canMultiBoot"] and 'rootflags=data=journal' in open('/dev/mmcblk0p1').read():
+		return (int(open('/sys/firmware/devicetree/base/chosen/bootargs', 'r').read().replace('\0', '').split('=')[1].split('p')[1].split(' ')[0])-3)/2
+	elif SystemInfo["canMultiBoot"]:
 		return	int(open('/sys/firmware/devicetree/base/chosen/kerneldev', 'r').read().replace('\0', '')[-1])
-	elif SystemInfo["canMultiBoot"](0) == "GB"
-		return int(open('/sys/firmware/devicetree/base/chosen/bootargs', 'r').read().replace('\0', '').split('=')[1].split('p')[1].split(' ')[0]) - 3 /2
 	else:
 		return 0
 
 def GetCurrentImageMode():
-	return SystemInfo["canMultiBoot"](0) == "HD" and int(open('/sys/firmware/devicetree/base/chosen/bootargs', 'r').read().replace('\0', '').split('=')[-1])
+	return SystemInfo["canMultiBoot"][1] == 4 and int(open('/sys/firmware/devicetree/base/chosen/bootargs', 'r').read().replace('\0', '').split('=')[-1])
 
 #		#default layout for Mut@nt HD51	& Giga4K								for GigaBlue 4K
 # STARTUP_1 			Image 1: boot emmcflash0.kernel1 'root=/dev/mmcblk0p3 rw rootwait'	boot emmcflash0.kernel1: 'root=/dev/mmcblk0p5 
@@ -25,8 +25,8 @@ class GetImagelist():
 
 	def __init__(self, callback):
 		if SystemInfo["canMultiBoot"]:
-			self.addin = SystemInfo["canMultiBoot"](1)
-			self.endslot = SystemInfo["canMultiBoot"](2)
+			self.addin = SystemInfo["canMultiBoot"][0]
+			self.endslot = SystemInfo["canMultiBoot"][1]
 			self.callback = callback
 			self.imagelist = {}
 			if not os.path.isdir('/tmp/testmount'):
