@@ -212,9 +212,9 @@ class doFlashImage(Screen):
 			self["imageList"].l.setList(self.imagelist)
 		
 	def box(self):
-		if SystemInfo["canMultiBootHD"][0"] == "HD":
+		if SystemInfo["canMultiBoot"][1] == 4:
 			box = "Mutant-HD51"
-		if SystemInfo["canMultiBootHD"][0"] == "GB":
+		if SystemInfo["canMultiBoot"][1] == 3:
 			box = HardwareInfo().get_device_model()
 		return box
 
@@ -358,10 +358,10 @@ class doFlashImage(Screen):
 			self.imagePath = self.imagePath
 
 	def layoutFinished(self):
-		if SystemInfo["canMultiBootHD"][0"] == "HD":
+		if SystemInfo["canMultiBoot"][1] == 4:
 			self.boxtype = "Mutant-HD51"
 			self.model = "mutant51"
-		if SystemInfo["canMultiBootHD"][0"] == "GB":
+		if SystemInfo["canMultiBoot"][1] == 3:
 			self.boxtype = HardwareInfo().get_device_model()
 			self.model = HardwareInfo().get_device_model()
 		self.imagelist = []
