@@ -337,11 +337,11 @@ class FlashImage(Screen):
 	def FlashimageDone(self, data, retval, extra_args):
 		self.containerofgwrite = None
 		if retval == 0:
-			self["header"].setText(_("Flashing image succesfull"))
+			self["header"].setText(_("Flashing image successfull"))
 			self["info"].setText(_("%s\nPress exit to close") % self.imagename)
 			self["progress"].hide()
 		else:
-			self.session.openWithCallback(self.abort, MessageBox, _("Flashing image was not succesfull\n%s") % self.imagename, type=MessageBox.TYPE_ERROR, simple=True)
+			self.session.openWithCallback(self.abort, MessageBox, _("Flashing image was not successfull\n%s") % self.imagename, type=MessageBox.TYPE_ERROR, simple=True)
 
 	def abort(self, reply=None):
 		if self.getImageList or self.containerofgwrite:
@@ -362,7 +362,7 @@ class MultibootSelection(SelectImage):
 		self.setTitle(_("Select Multiboot"))
 		self["key_red"] = StaticText(_("Cancel"))
 		self["key_green"] = StaticText(_("Reboot"))
-		self["list"] = ChoiceList(list=[ChoiceEntryComponent('',((_("Retreiving image slots - Please wait...")), "Waiter"))])
+		self["list"] = ChoiceList(list=[ChoiceEntryComponent('',((_("Retrieving image slots - Please wait...")), "Waiter"))])
 
 		self["actions"] = ActionMap(["OkCancelActions", "ColorActions", "DirectionActions", "KeyboardInputActions", "MenuActions"],
 		{
