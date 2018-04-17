@@ -74,3 +74,79 @@ class GetImagelist():
 			if not os.path.ismount('/tmp/testmount'):
 				os.rmdir('/tmp/testmount')
 			self.callback(self.imagelist)
+
+class GetSTARTUP():
+	MOUNT = 0
+	UNMOUNT = 1
+
+	def __init__(self, callback):
+		if SystemInfo["canMultiBoot"]:
+			self.addin = SystemInfo["canMultiBoot"][0]
+			self.endslot = SystemInfo["canMultiBoot"][1]
+			self.callback = callback
+			self.imagelist = {}
+			if not os.path.isdir('/tmp/testmount'):
+				os.mkdir('/tmp/testmount')
+			self.container = Console()
+			self.slot = 1
+			self.phase = self.MOUNT
+			self.run()
+		else:	
+			callback({})
+	
+	def run(self):
+		volume = SystemInfo["canMultiBoot"][2]
+		self.container.ePopen('mount /dev/%s /tmp/testmount' %volume if self.phase == self.MOUNT else 'umount /tmp/testmount', self.appClosed)
+			
+	def appClosed(self, data, retval, extra_args):
+		if retval == 0 and self.phase == self.MOUNT:
+			for x in range(1, self.endslot + 1):
+				if os.path.isfile("/tmp/testmount/STARTUP_%s" % self.slot):
+					self.imagelist[self.slot] =  { 'STARTUP': open('/tmp/testmount/STARTUP_%s'% self.slot).read()}
+					self.slot += 1
+			if os.path.isfile("/tmp/testmount/STARTUP"):
+				self.imagelist[self.endslot +1] =  { 'STARTUP': open('/tmp/testmount/STARTUP').read()}
+			self.phase = self.UNMOUNT
+			self.run()
+		else:
+			self.container.killAll()
+			if not os.path.ismount('/tmp/testmount'):
+				os.rmdir('/tmp/testmount')
+			self.callback(self.imagelist)
+
+class WriteStartup():
+	MOUNT = 0
+	UNMOUNT = 1
+
+	def __init__(self, Contents, callback):
+		if SystemInfo["canMultiBoot"]:
+			if not os.path.isdir('/tmp/testmount'):
+				os.mkdir('/tmp/testmount')
+			self.callback = callback
+			self.container = Console()
+			self.phase = self.MOUNT
+			if not SystemInfo["canMode12"]:
+				self.slot = Contents
+			else:
+				self.contents = Contents			
+			self.run()
+		else:	
+			callback({})
+	
+	def run(self):
+		volume = SystemInfo["canMultiBoot"][2]
+		self.container.ePopen('mount /dev/%s /tmp/testmount' %volume if self.phase == self.MOUNT else 'umount /tmp/testmount', self.appClosed)
+			
+	def appClosed(self, data, retval, extra_args):
+		if retval == 0 and self.phase == self.MOUNT:
+			if os.path.isfile("/tmp/testmount/STARTUP"):
+				if not SystemInfo["canMode12"]:
+					self.contents = open('/tmp/testmount/STARTUP_%s'% self.slot).read()
+				open('/tmp/testmount/STARTUP', 'w').write(self.contents)
+			self.phase = self.UNMOUNT
+			self.run()
+		else:
+			self.container.killAll()
+			if not os.path.ismount('/tmp/testmount'):
+				os.rmdir('/tmp/testmount')
+			self.callback()

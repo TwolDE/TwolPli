@@ -19,7 +19,7 @@ from Screens.TaskView import JobView
 from Tools.Downloader import downloadWithProgress
 from Tools.HardwareInfo import HardwareInfo
 from Tools.Directories import fileExists, fileCheck
-from Tools.Multiboot import GetImagelist, GetCurrentImage, GetCurrentImageMode
+from Tools.Multiboot import GetImagelist, GetCurrentImage, GetCurrentImageMode, , WriteStartup
 from enigma import fbClass
 import urllib2
 import os
@@ -300,11 +300,15 @@ class doFlashImage(Screen):
 
 	def CopyStartup(self):
 		fbClass.getInstance().unlock()
-		for media in ['/media/%s' % x for x in os.listdir('/media') if x.startswith('mmc')]:
-			if 'STARTUP' in os.listdir(media):
-				os.system("cp -f '%s/STARTUP_%s' '%s/STARTUP'" %(media, self.multi, media))
-				break
-		self.session.open(TryQuitMainloop, 2)
+		if not SystemInfo["canMode12"]:
+			Startupx = WriteStartup(self.multi, self.ReExit)
+		else:
+			model = HardwareInfo().get_device_model()
+			startupFileContents = "boot emmcflash0.kernel%s 'root=/dev/mmcblk0p%s rw rootwait %s_4.boxmode=1'\n" % (self.multi, self.multi * 2 + 1, model)
+			Startupx = WriteStartup(startupFileContents, self.ReExit)
+
+	def ReExit(self):
+			self.session.open(TryQuitMainloop, 2)
 
 
 	def prepair_tmpPath(self, flashPath):
