@@ -19,7 +19,7 @@ from Screens.TaskView import JobView
 from Tools.Downloader import downloadWithProgress
 from Tools.HardwareInfo import HardwareInfo
 from Tools.Directories import fileExists, fileCheck
-from Tools.Multiboot import GetImagelist, GetCurrentImage, GetCurrentImageMode, , WriteStartup
+from Tools.Multiboot import GetImagelist, GetCurrentImage, GetCurrentImageMode, WriteStartup
 from enigma import fbClass
 import urllib2
 import os
