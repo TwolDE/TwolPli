@@ -140,7 +140,7 @@ class WriteStartup():
 	def appClosed(self, data, retval, extra_args):
 		if retval == 0 and self.phase == self.MOUNT:
 			if os.path.isfile("/tmp/testmount/STARTUP"):
-				if not SystemInfo["canMode12"]:
+				if 'coherent_poll=2M' in open("/proc/cmdline", "r").read():
 					self.contents = open('/tmp/testmount/STARTUP_%s'% self.slot).read()
 				open('/tmp/testmount/STARTUP', 'w').write(self.contents)
 			self.phase = self.UNMOUNT
