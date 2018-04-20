@@ -136,7 +136,8 @@ class WriteStartup():
 	def run(self):
 		volume = SystemInfo["canMultiBoot"][2]
 		self.container.ePopen('mount /dev/%s /tmp/testmount' %volume if self.phase == self.MOUNT else 'umount /tmp/testmount', self.appClosed)
-			
+#	If GigaBlue then Contents = slot, use slot to read STARTUP_slot
+#	If multimode and bootmode 1 or 12, then Contents is STARTUP file, so just write it to STARTUP.			
 	def appClosed(self, data, retval, extra_args):
 		if retval == 0 and self.phase == self.MOUNT:
 			if os.path.isfile("/tmp/testmount/STARTUP"):
