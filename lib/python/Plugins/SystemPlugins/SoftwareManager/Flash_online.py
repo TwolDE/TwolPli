@@ -300,12 +300,12 @@ class doFlashImage(Screen):
 
 	def CopyStartup(self):
 		fbClass.getInstance().unlock()
-		if not SystemInfo["canMode12"]:
-			Startupx = WriteStartup(self.multi, self.ReExit)
+		if SystemInfo["canMultiBoot"] and 'coherent_poll=2M' in open("/proc/cmdline", "r").read():
+			WriteStartup(self.multi, self.ReExit)
 		else:
 			model = HardwareInfo().get_device_model()
 			startupFileContents = "boot emmcflash0.kernel%s 'root=/dev/mmcblk0p%s rw rootwait %s_4.boxmode=1'\n" % (self.multi, self.multi * 2 + 1, model)
-			Startupx = WriteStartup(startupFileContents, self.ReExit)
+			WriteStartup(startupFileContents, self.ReExit)
 
 	def ReExit(self):
 			self.session.open(TryQuitMainloop, 2)

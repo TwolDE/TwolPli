@@ -4,10 +4,7 @@ import os
 
 def GetCurrentImage():
 	if SystemInfo["canMultiBoot"]:
-		if not SystemInfo["canMode12"]:
-			return (int(open('/sys/firmware/devicetree/base/chosen/bootargs', 'r').read().replace('\0', '').split('=')[1].split('p')[1].split(' ')[0])-3)/2
-		else:
-			return	int(open('/sys/firmware/devicetree/base/chosen/kerneldev', 'r').read().replace('\0', '')[-1])
+		return (int(open('/sys/firmware/devicetree/base/chosen/bootargs', 'r').read().replace('\0', '').split('=')[1].split('p')[1].split(' ')[0])-SystemInfo["canMultiBoot"][0])/2
 
 def GetCurrentImageMode():
 	if SystemInfo["canMultiBoot"] and SystemInfo["canMode12"]: 
@@ -95,8 +92,7 @@ class GetSTARTUP():
 			callback({})
 	
 	def run(self):
-		volume = SystemInfo["canMultiBoot"][2]
-		self.container.ePopen('mount /dev/%s /tmp/testmount' %volume if self.phase == self.MOUNT else 'umount /tmp/testmount', self.appClosed)
+		self.container.ePopen('mount /dev/mmcblk0p1 /tmp/testmount' if self.phase == self.MOUNT else 'umount /tmp/testmount', self.appClosed)
 			
 	def appClosed(self, data, retval, extra_args):
 		if retval == 0 and self.phase == self.MOUNT:
@@ -134,8 +130,7 @@ class WriteStartup():
 			callback({})
 	
 	def run(self):
-		volume = SystemInfo["canMultiBoot"][2]
-		self.container.ePopen('mount /dev/%s /tmp/testmount' %volume if self.phase == self.MOUNT else 'umount /tmp/testmount', self.appClosed)
+		self.container.ePopen('mount /dev/mmcblk0p1 /tmp/testmount' if self.phase == self.MOUNT else 'umount /tmp/testmount', self.appClosed)
 #	If GigaBlue then Contents = slot, use slot to read STARTUP_slot
 #	If multimode and bootmode 1 or 12, then Contents is STARTUP file, so just write it to STARTUP.			
 	def appClosed(self, data, retval, extra_args):
