@@ -420,7 +420,7 @@ class MultibootSelection(SelectImage):
 			model = HardwareInfo.get_machine_name()
 			if 'coherent_poll=2M' in open("/proc/cmdline", "r").read():
 				#when Gigablue do something else... this needs to be improved later!!!
-				startupFileContents = "boot emmcflash0.kernel%s 'root=/dev/mmcblk0p%s rootwait rw rootflags=data=journal libata.force=1:3.0G,2:3.0G,3:3.0G coherent_poll=2M brcm_cma=764M@0x10000000 brcm_cma=1024M@0x80000000'\n" % (slot, slot * 2 + 3)
+				startupFileContents = "boot emmcflash0.kernel%s 'root=/dev/mmcblk0p%s rootwait rw rootflags=data=journal libata.force=1:3.0G,2:3.0G,3:3.0G coherent_poll=2M vmalloc=525m bmem=529m@491m bmem=608m@2464m'\n" % (slot, slot * 2 + 3)
 			elif slot < 12:
 				startupFileContents = "boot emmcflash0.kernel%s 'root=/dev/mmcblk0p%s rw rootwait %s_4.boxmode=1'\n" % (slot, slot * 2 + 1, model)
 			else:
