@@ -8,7 +8,7 @@ import os
 # STARTUP_4		        Image 4: boot emmcflash0.kernel4 'root=/dev/mmcblk0p9 rw rootwait'	NOT IN USE due to Rescue mode in mmcblk0p3
 
 def GetCurrentImage():
-	return SystemInfo["canMultiBoot"] and (int(open('/sys/firmware/devicetree/base/chosen/bootargs', 'r').read().replace('\0', '').split('=')[1].split('p')[1].split(' ')[0])-SystemInfo["canMultiBoot"][0])/2
+	return SystemInfo["canMultiBoot"] and (int(open('/sys/firmware/devicetree/base/chosen/bootargs', 'r').read().replace('\0', '').split('mmcblk0p')[1].split(' ')[0])-SystemInfo["canMultiBoot"][0])/2
 
 def GetCurrentImageMode():
 	return SystemInfo["canMultiBoot"] and SystemInfo["canMode12"] and int(open('/sys/firmware/devicetree/base/chosen/bootargs', 'r').read().replace('\0', '').split('=')[-1])
@@ -54,12 +54,12 @@ class GetImagelist():
 			if os.path.isfile("/tmp/testmount/usr/bin/enigma2"):
 				self.imagelist[self.slot] =  { 'imagename': open("/tmp/testmount/etc/issue").readlines()[-2].capitalize().strip()[:-6] + BuildVersion}
 			else:
-				self.imagelist[self.slot] = { 'imagename': _("Empty slot") }
+				self.imagelist[self.slot] = { 'imagename': _("Empty slot")}
 			self.phase = self.UNMOUNT
 			self.run()
 		elif self.slot < self.numberofslots:
 			self.slot += 1
-			self.imagelist[self.slot] = { 'imagename': _("Empty slot") }
+			self.imagelist[self.slot] = { 'imagename': _("Empty slot")}
 			self.phase = self.MOUNT
 			self.run()
 		else:
@@ -106,38 +106,28 @@ class GetSTARTUP():
 			self.callback(self.imagelist)
 
 class WriteStartup():
-	MOUNT = 0
-	UNMOUNT = 1
 
 	def __init__(self, Contents, callback):
-		if SystemInfo["canMultiBoot"]:
-			if not os.path.isdir('/tmp/testmount'):
-				os.mkdir('/tmp/testmount')
-			self.callback = callback
-			self.container = Console()
-			self.phase = self.MOUNT
-			if not SystemInfo["canMode12"]:
-				self.slot = Contents
-			else:
-				self.contents = Contents			
-			self.run()
-		else:	
-			callback({})
+		self.callback = callback
+		self.container = Console()
+		if not SystemInfo["canMode12"]:
+			self.slot = Contents
+		else:
+			self.contents = Contents
+		if os.path.isdir('/tmp/startupmount'):
+			self.ContainerFallback()
+		else:
+			os.mkdir('/tmp/startupmount')
+			self.container.ePopen('mount /dev/mmcblk0p1 /tmp/startupmount', self.ContainerFallback)
+
 	
-	def run(self):
-		self.container.ePopen('mount /dev/mmcblk0p1 /tmp/testmount' if self.phase == self.MOUNT else 'umount /tmp/testmount', self.appClosed)
+	def ContainerFallback(self, data=None, retval=None, extra_args=None):
+		self.container.killAll()
 #	If GigaBlue then Contents = slot, use slot to read STARTUP_slot
 #	If multimode and bootmode 1 or 12, then Contents is STARTUP file, so just write it to STARTUP.			
-	def appClosed(self, data, retval, extra_args):
-		if retval == 0 and self.phase == self.MOUNT:
-			if os.path.isfile("/tmp/testmount/STARTUP"):
-				if 'coherent_poll=2M' in open("/proc/cmdline", "r").read():
-					self.contents = open('/tmp/testmount/STARTUP_%s'% self.slot).read()
-				open('/tmp/testmount/STARTUP', 'w').write(self.contents)
-			self.phase = self.UNMOUNT
-			self.run()
+		if 'coherent_poll=2M' in open("/proc/cmdline", "r").read():
+			import shutil
+			shutil.copyfile("/tmp/startupmount/STARTUP_%s" % self.slot, "/tmp/startupmount/STARTUP")
 		else:
-			self.container.killAll()
-			if not os.path.ismount('/tmp/testmount'):
-				os.rmdir('/tmp/testmount')
-			self.callback()
+			open('/tmp/startupmount/STARTUP', 'w').write(self.contents)
+		self.callback()

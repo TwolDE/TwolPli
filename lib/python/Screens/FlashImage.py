@@ -14,7 +14,8 @@ from Tools.BoundFunction import boundFunction
 from Tools.Downloader import downloadWithProgress
 from Tools.HardwareInfo import HardwareInfo
 from Tools.Multiboot import GetImagelist, GetCurrentImage, GetCurrentImageMode, WriteStartup
-import os, urllib2, json, time, zipfile
+import os, urllib2, json, time, zipfile, shutil
+
 from enigma import eTimer, eEPGCache
 
 def checkimagefiles(files):
@@ -71,7 +72,7 @@ class SelectImage(Screen):
 				except:
 					pass
 
-		model = HardwareInfo.get_machine_name()
+		model = HardwareInfo().get_machine_name()
 
 		if not self.imagesList:
 			if not self.jsonlist:
@@ -129,7 +130,6 @@ class SelectImage(Screen):
 			os.remove(currentSelected)
 			currentSelected = ".".join([currentSelected[:-4], "unzipped"])
 			if os.path.isdir(currentSelected):
-				import shutil
 				shutil.rmtree(currentSelected)
 			self.setIndex = self["list"].getSelectedIndex()
 			self.imagesList = []
@@ -392,20 +392,18 @@ class MultibootSelection(SelectImage):
 		currentimageslot = GetCurrentImage()
 		mode = GetCurrentImageMode() or 0
 		for x in sorted(imagesdict.keys()):
-			list.append(ChoiceEntryComponent('',((_("slot%s - %s current mode 1 (current image)") if x == currentimageslot and mode != 12 else _("slot%s - %s  restart mode 1 ")) % (x, imagesdict[x]['imagename']), x)))
-			if SystemInfo["canMode12"]:
-				list.append(ChoiceEntryComponent('',((_("slot%s - %s current mode 12 (current image)") if x == currentimageslot and mode == 12 else _("slot%s - %s  restart mode 12 ")) % (x, imagesdict[x]['imagename']), x + 12)))
+			if imagesdict[x]["imagename"] != _("Empty slot"):
+				list.append(ChoiceEntryComponent('',((_("slot%s - %s mode 1 (current image)") if x == currentimageslot and mode != 12 else _("slot%s - %s mode 1 ")) % (x, imagesdict[x]['imagename']), x)))
+				if SystemInfo["canMode12"]:
+					list.append(ChoiceEntryComponent('',((_("slot%s - %s mode 12 (current image)") if x == currentimageslot and mode == 12 else _("slot%s - %s mode 12 ")) % (x, imagesdict[x]['imagename']), x + 12)))
 		self["list"].setList(list)
 
 	def keyOk(self):
-		currentSelected = self["list"].l.getCurrentSelection()
-		slot = currentSelected[0][1]
-		if currentSelected[0][1] != "Waiter":
- 			model = HardwareInfo().get_device_model()
-#	If Gigablue then pass slot to write routine, to read STARTUP_slot and write to STARTUP
-#	If multimode and mode 1 then build bootmode 1 STARTUP and pass to write routine
-#	If multimode and mode 12 then build bootmode 12 STARTUP and pass to write routine
-			if SystemInfo["canMultiBoot"] and 'coherent_poll=2M' in open("/proc/cmdline", "r").read():
+		self.currentSelected = self["list"].l.getCurrentSelection()
+		if self.currentSelected[0][1] != "Waiter":
+			slot = self.currentSelected[0][1]
+			model = HardwareInfo().get_machine_name()
+			if 'coherent_poll=2M' in open("/proc/cmdline", "r").read():
 				WriteStartup(slot, self.ReExit)
 			elif slot < 12:
 				startupFileContents = "boot emmcflash0.kernel%s 'root=/dev/mmcblk0p%s rw rootwait %s_4.boxmode=1'\n" % (slot, slot * 2 + SystemInfo["canMultiBoot"][0], model)
@@ -414,9 +412,10 @@ class MultibootSelection(SelectImage):
 				slot -= 12
 				startupFileContents = "boot emmcflash0.kernel%s 'brcm_cma=520M@248M brcm_cma=%s@768M root=/dev/mmcblk0p%s rw rootwait %s_4.boxmode=12'\n" % (slot, slot * 2 + SystemInfo["canMultiBoot"][0], model)
 				WriteStartup(startupFileContents, self.ReExit)
+
 	def ReExit(self):
-			from Screens.Standby import TryQuitMainloop
-			self.session.open(TryQuitMainloop, 2)
+		from Screens.Standby import TryQuitMainloop
+		self.session.open(TryQuitMainloop, 2)
 
 
 	def selectionChanged(self):
