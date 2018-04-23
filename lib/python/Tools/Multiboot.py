@@ -68,43 +68,6 @@ class GetImagelist():
 				os.rmdir('/tmp/testmount')
 			self.callback(self.imagelist)
 
-class GetSTARTUP():
-	MOUNT = 0
-	UNMOUNT = 1
-
-	def __init__(self, callback):
-		if SystemInfo["canMultiBoot"]:
-			(self.firstslot, self.numberofslots) = SystemInfo["canMultiBoot"]
-			self.callback = callback
-			self.imagelist = {}
-			if not os.path.isdir('/tmp/testmount'):
-				os.mkdir('/tmp/testmount')
-			self.container = Console()
-			self.slot = 1
-			self.phase = self.MOUNT
-			self.run()
-		else:	
-			callback({})
-	
-	def run(self):
-		self.container.ePopen('mount /dev/mmcblk0p1 /tmp/testmount' if self.phase == self.MOUNT else 'umount /tmp/testmount', self.appClosed)
-			
-	def appClosed(self, data, retval, extra_args):
-		if retval == 0 and self.phase == self.MOUNT:
-			for x in range(1, self.numberofslots + 1):
-				if os.path.isfile("/tmp/testmount/STARTUP_%s" % self.slot):
-					self.imagelist[self.slot] =  { 'STARTUP': open('/tmp/testmount/STARTUP_%s'% self.slot).read()}
-					self.slot += 1
-			if os.path.isfile("/tmp/testmount/STARTUP"):
-				self.imagelist[self.numberofslots +1] =  { 'STARTUP': open('/tmp/testmount/STARTUP').read()}
-			self.phase = self.UNMOUNT
-			self.run()
-		else:
-			self.container.killAll()
-			if not os.path.ismount('/tmp/testmount'):
-				os.rmdir('/tmp/testmount')
-			self.callback(self.imagelist)
-
 class WriteStartup():
 
 	def __init__(self, Contents, callback):
