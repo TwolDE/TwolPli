@@ -303,7 +303,7 @@ class doFlashImage(Screen):
 		if SystemInfo["canMultiBoot"] and 'coherent_poll=2M' in open("/proc/cmdline", "r").read():
 			WriteStartup(self.multi, self.ReExit)
 		else:
-			model = HardwareInfo().get_device_model()
+			model = HardwareInfo().get_machine_name()
 			startupFileContents = "boot emmcflash0.kernel%s 'root=/dev/mmcblk0p%s rw rootwait %s_4.boxmode=1'\n" % (self.multi, self.multi * 2 + 1, model)
 			WriteStartup(startupFileContents, self.ReExit)
 
