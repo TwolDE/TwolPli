@@ -401,16 +401,15 @@ class MultibootSelection(SelectImage):
 		self.currentSelected = self["list"].l.getCurrentSelection()
 		if self.currentSelected[0][1] != "Waiter":
 			slot = self.currentSelected[0][1]
+			mode = 0
 			model = HardwareInfo().get_machine_name()
 			if 'coherent_poll=2M' in open("/proc/cmdline", "r").read():
 				WriteStartup(slot, self.ReExit)
-			elif slot < 12:
-				startupFileContents = "boot emmcflash0.kernel%s 'brcm_cma=%s brcm_cma=%s root=/dev/mmcblk0p%s rw rootwait %s_4.boxmode=1'\n" % (slot, SystemInfo["canMode12"][0], SystemInfo["canMode12"][1], slot * 2 + SystemInfo["canMultiBoot"][0], model)
-				WriteStartup(startupFileContents, self.ReExit)
-			else:
+			if slot >= 12:
+				mode = 1
 				slot -= 12
-				startupFileContents = "boot emmcflash0.kernel%s 'brcm_cma=%s brcm_cma=%s root=/dev/mmcblk0p%s rw rootwait %s_4.boxmode=12'\n" % (slot, SystemInfo["canMode12"][2], SystemInfo["canMode12"][3], slot * 2 + SystemInfo["canMultiBoot"][0], model)
-				WriteStartup(startupFileContents, self.ReExit)
+			startupFileContents = "boot emmcflash0.kernel%s 'brcm_cma=%s root=/dev/mmcblk0p%s rw rootwait %s_4.boxmode=1'\n" % (slot, SystemInfo["canMode12"][mode], slot * 2 + SystemInfo["canMultiBoot"][0], model)
+			WriteStartup(startupFileContents, self.ReExit)
 
 	def ReExit(self):
 		from Screens.Standby import TryQuitMainloop
