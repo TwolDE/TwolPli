@@ -402,13 +402,15 @@ class MultibootSelection(SelectImage):
 		if self.currentSelected[0][1] != "Waiter":
 			slot = self.currentSelected[0][1]
 			mode = 0
+			boxmode = 1
 			model = HardwareInfo().get_machine_name()
 			if 'coherent_poll=2M' in open("/proc/cmdline", "r").read():
 				WriteStartup(slot, self.ReExit)
 			if slot >= 12:
 				mode = 1
+				boxmode = 12
 				slot -= 12
-			startupFileContents = "boot emmcflash0.kernel%s 'brcm_cma=%s root=/dev/mmcblk0p%s rw rootwait %s_4.boxmode=1'\n" % (slot, SystemInfo["canMode12"][mode], slot * 2 + SystemInfo["canMultiBoot"][0], model)
+			startupFileContents = "boot emmcflash0.kernel%s 'brcm_cma=%s root=/dev/mmcblk0p%s rw rootwait %s_4.boxmode=%s'\n" % (slot, SystemInfo["canMode12"][mode], slot * 2 + SystemInfo["canMultiBoot"][0], model, boxmode)
 			WriteStartup(startupFileContents, self.ReExit)
 
 	def ReExit(self):
