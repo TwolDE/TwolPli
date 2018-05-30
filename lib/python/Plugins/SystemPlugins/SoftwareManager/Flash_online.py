@@ -21,9 +21,9 @@ from Tools.HardwareInfo import HardwareInfo
 from Tools.Directories import fileExists, fileCheck
 from Tools.Multiboot import GetImagelist, GetCurrentImage, GetCurrentImageMode, WriteStartup
 from enigma import fbClass
+from shutil import copyfile
 import urllib2
 import os
-import shutil
 import math
 from Tools.HardwareInfo import HardwareInfo
 
@@ -300,15 +300,8 @@ class doFlashImage(Screen):
 
 	def CopyStartup(self):
 		fbClass.getInstance().unlock()
-		if SystemInfo["canMultiBoot"] and 'coherent_poll=2M' in open("/proc/cmdline", "r").read():
-			WriteStartup(self.multi, self.ReExit)
-		else:
-			model = HardwareInfo().get_machine_name()
-			startupFileContents = "boot emmcflash0.kernel%s 'root=/dev/mmcblk0p%s rw rootwait %s_4.boxmode=1'\n" % (self.multi, self.multi * 2 + 1, model)
-			WriteStartup(startupFileContents, self.ReExit)
-
-	def ReExit(self):
-			self.session.open(TryQuitMainloop, 2)
+		copyfile("/boot/STARTUP_%s" % self.multi, "/boot/STARTUP")
+		self.session.open(TryQuitMainloop, 2)
 
 
 	def prepair_tmpPath(self, flashPath):
@@ -326,12 +319,12 @@ class doFlashImage(Screen):
 				if name.find('kernel') > -1 and name.endswith('.bin') and kernel:
 					binfile = os.path.join(path, name)
 					dest = self.tmpPath + '/kernel.bin' 
-					shutil.copyfile(binfile, dest)
+					copyfile(binfile, dest)
 					kernel = False
 				elif name.find('root') > -1 and (name.endswith('.bin') or name.endswith('.jffs2') or name.endswith('.bz2')) and rootfs:
 					binfile = os.path.join(path, name)
 					dest = self.tmpPath + '/rootfs.tar.bz2'
-					shutil.copyfile(binfile, dest)
+					copyfile(binfile, dest)
 					rootfs = False
 
 	def yellow(self):
