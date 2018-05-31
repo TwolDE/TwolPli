@@ -7,6 +7,7 @@ install_PYTHON =	\
 	plugin.py \
 	BackupRestore.py \
 	ImageBackup.py \
+	IPTVcreate.py \
 	Flash_online.py \
 	ImageWizard.py \
 	SoftwareTools.py
