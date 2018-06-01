@@ -9,7 +9,8 @@ install_PYTHON =	\
 	ImageBackup.py \
 	IPTVcreate.py \
 	Flash_online.py \
-	ImageWizard.py \
+	e2m3u2bouquet.py \
+ 	ImageWizard.py \
 	SoftwareTools.py
 
 dist_install_DATA = \
