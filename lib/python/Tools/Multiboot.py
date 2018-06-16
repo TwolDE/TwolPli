@@ -89,28 +89,38 @@ class GetImagelist():
 			self.callback(self.imagelist)
 
 class WriteStartup():
+	MOUNT = 0
+	UNMOUNT = 1
 
 	def __init__(self, Contents, callback):
-		self.callback = callback
-		self.container = Console()
-		if not SystemInfo["canMode12"]:
-			self.slot = Contents
-		else:
-			self.contents = Contents
-		if os.path.isdir('/tmp/startupmount'):
-			self.ContainerFallback()
-		else:
-			os.mkdir('/tmp/startupmount')
-			self.container.ePopen('mount /dev/mmcblk0p1 /tmp/startupmount', self.ContainerFallback)
-
+		if SystemInfo["canMultiBoot"]:
+			if not os.path.isdir('/tmp/testmount'):
+				os.mkdir('/tmp/testmount')
+			self.callback = callback
+			self.container = Console()
+			self.phase = self.MOUNT
+			if not SystemInfo["canMode12"]:
+				self.slot = Contents
+			else:
+				self.contents = Contents			
+			self.run()
+		else:	
+			callback({})
 	
-	def ContainerFallback(self, data=None, retval=None, extra_args=None):
-		self.container.killAll()
+	def run(self):
+		self.container.ePopen('mount /dev/mmcblk0p1 /tmp/testmount' if self.phase == self.MOUNT else 'umount /tmp/testmount', self.appClosed)
 #	If GigaBlue then Contents = slot, use slot to read STARTUP_slot
 #	If multimode and bootmode 1 or 12, then Contents is STARTUP file, so just write it to STARTUP.			
-		if 'coherent_poll=2M' in open("/proc/cmdline", "r").read():
-			import shutil
-			shutil.copyfile("/tmp/startupmount/STARTUP_%s" % self.slot, "/tmp/startupmount/STARTUP")
+	def appClosed(self, data, retval, extra_args):
+		if retval == 0 and self.phase == self.MOUNT:
+			if os.path.isfile("/tmp/testmount/STARTUP"):
+				if 'coherent_poll=2M' in open("/proc/cmdline", "r").read():
+					self.contents = open('/tmp/testmount/STARTUP_%s'% self.slot).read()
+				open('/tmp/testmount/STARTUP', 'w').write(self.contents)
+			self.phase = self.UNMOUNT
+			self.run()
 		else:
-			open('/tmp/startupmount/STARTUP', 'w').write(self.contents)
-		self.callback()
+			self.container.killAll()
+			if not os.path.ismount('/tmp/testmount'):
+				os.rmdir('/tmp/testmount')
+			self.callback()
