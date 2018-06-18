@@ -14,7 +14,7 @@ from Components.Label import Label
 from Components.ProgressBar import ProgressBar
 
 from Tools.StbHardware import getFPVersion
-from Tools.Multiboot import GetCurrentImage
+from Tools.Multiboot import GetCurrentImage, GetCurrentImageMode
 from enigma import eTimer, eLabel, eConsoleAppContainer
 
 from Components.GUIComponent import GUIComponent
@@ -30,7 +30,8 @@ class About(Screen):
 		AboutText += _("CPU: ") + about.getCPUInfoString() + "\n"
 		AboutText += _("Image: ") + about.getImageTypeString() + "\n"
 		if SystemInfo["canMultiBoot"]:
-			AboutText += _("STARTUP slot: ") + str(GetCurrentImage()) + "\n"
+			bootmode = " bootmode = %s" %GetCurrentImageMode()
+			AboutText += _("STARTUP slot: ") + str(GetCurrentImage()) + bootmode + "\n"
 		AboutText += _("Build date: ") + about.getBuildDateString() + "\n"
 		AboutText += _("Last upgrade: ") + about.getUpdateDateString() + "\n"
 
