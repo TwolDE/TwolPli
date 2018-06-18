@@ -30,7 +30,9 @@ class About(Screen):
 		AboutText += _("CPU: ") + about.getCPUInfoString() + "\n"
 		AboutText += _("Image: ") + about.getImageTypeString() + "\n"
 		if SystemInfo["canMultiBoot"]:
-			bootmode = " bootmode = %s" %GetCurrentImageMode()
+			bootmode = ""
+			if canMode12:
+				bootmode = " bootmode = %s" %GetCurrentImageMode()
 			AboutText += _("STARTUP slot: ") + str(GetCurrentImage()) + bootmode + "\n"
 		AboutText += _("Build date: ") + about.getBuildDateString() + "\n"
 		AboutText += _("Last upgrade: ") + about.getUpdateDateString() + "\n"
