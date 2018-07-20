@@ -31,7 +31,7 @@ class About(Screen):
 		AboutText += _("Image: ") + about.getImageTypeString() + "\n"
 		if SystemInfo["canMultiBoot"]:
 			bootmode = ""
-			if canMode12:
+			if SystemInfo["canMode12"]:
 				bootmode = " bootmode = %s" %GetCurrentImageMode()
 			AboutText += _("STARTUP slot: ") + str(GetCurrentImage()) + bootmode + "\n"
 		AboutText += _("Build date: ") + about.getBuildDateString() + "\n"
