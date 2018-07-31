@@ -301,24 +301,14 @@ class doFlashImage(Screen):
 	def CopyStartup(self):
 		fbClass.getInstance().unlock()
 		self.container = Console()
-		if os.path.isdir('/tmp/startupmount'):
-			self.ContainterFallback()
-		else:
-			os.mkdir('/tmp/startupmount')
-			self.container.ePopen('mount /dev/mmcblk0p1 /tmp/startupmount', self.ContainterFallback)
-
-	def ContainterFallback(self, data=None, retval=None, extra_args=None):
-		self.container.killAll()
 		slot = self.multi
 		model = HardwareInfo().get_machine_name()
 		if 'coherent_poll=2M' in open("/proc/cmdline", "r").read():
-			#when Gigablue do something else... this needs to be improved later!!! It even looks that the GB method is better :)
-			shutil.copyfile("/tmp/startupmount/STARTUP_%s" % slot, "/tmp/startupmount/STARTUP")
+			shutil.copyfile("/sta/STARTUP_%s" % slot, "/stc/STARTUP")
 		else:
 			startupFileContents = "boot emmcflash0.kernel%s 'root=/dev/mmcblk0p%s rw rootwait %s_4.boxmode=1'\n" % (slot, slot * 2 + 1, model)
-			open('/tmp/startupmount/STARTUP', 'w').write(startupFileContents)
+			open('/sta/STARTUP', 'w').write(startupFileContents)
 		self.session.open(TryQuitMainloop, 2)
-
 
 	def prepair_tmpPath(self, flashPath):
 		if os.path.exists(self.tmpPath):
