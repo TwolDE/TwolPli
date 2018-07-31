@@ -17,6 +17,14 @@ from Tools.HardwareInfo import HardwareInfo
 
 inStandby = None
 
+QUIT_SHUTDOWN = 1
+QUIT_REBOOT = 2
+QUIT_RESTART = 3
+QUIT_UPGRADE_FP = 4
+QUIT_ERROR_RESTART = 5
+QUIT_UPGRADE_PROGRAM = 42
+QUIT_IMAGE_RESTORE = 43
+
 class Standby(Screen):
 	def Power(self):
 		print "[Standby] leave standby"
@@ -200,12 +208,14 @@ class QuitMainloopScreen(Screen):
 			</screen>"""
 		Screen.__init__(self, session)
 		from Components.Label import Label
-		text = { 1: _("Your receiver is shutting down"),
-			2: _("Your receiver is rebooting"),
-			3: _("The user interface of your receiver is restarting"),
-			4: _("Your frontprocessor will be upgraded\nPlease wait until your receiver reboots\nThis may take a few minutes"),
-			5: _("The user interface of your receiver is restarting\ndue to an error in mytest.py"),
-			42: _("Unattended upgrade in progress\nPlease wait until your receiver reboots\nThis may take a few minutes") }.get(retvalue)
+		text = {
+			QUIT_SHUTDOWN: _("Your receiver is shutting down"),
+			QUIT_REBOOT: _("Your receiver is rebooting"),
+			QUIT_RESTART: _("The user interface of your receiver is restarting"),
+			QUIT_UPGRADE_FP: _("Your frontprocessor will be upgraded\nPlease wait until your receiver reboots\nThis may take a few minutes"),
+			QUIT_ERROR_RESTART: _("The user interface of your receiver is restarting\ndue to an error in mytest.py"),
+			QUIT_UPGRADE_PROGRAM: _("Unattended upgrade in progress\nPlease wait until your receiver reboots\nThis may take a few minutes") 
+		}.get(retvalue)
 		self["text"] = Label(text)
 
 inTryQuitMainloop = False
@@ -229,11 +239,13 @@ class TryQuitMainloop(MessageBox):
 			else:
 				reason += (ngettext("%d job is running in the background!", "%d jobs are running in the background!", jobs) % jobs) + '\n'
 		if reason:
-			text = { 1: _("Really shutdown now?"),
-				2: _("Really reboot now?"),
-				3: _("Really restart now?"),
-				4: _("Really upgrade the frontprocessor and reboot now?"),
-				42: _("Really upgrade your settop box and reboot now?") }.get(retvalue)
+			text = {
+				QUIT_SHUTDOWN: _("Really shutdown now?"),
+				QUIT_REBOOT: _("Really reboot now?"),
+				QUIT_RESTART: _("Really restart now?"),
+				QUIT_UPGRADE_FP: _("Really upgrade the frontprocessor and reboot now?"),
+				QUIT_UPGRADE_PROGRAM: _("Really upgrade your settop box and reboot now?") 
+			}.get(retvalue)
 			if text:
 				MessageBox.__init__(self, session, reason+text, type = MessageBox.TYPE_YESNO, timeout = timeout, default = default_yes)
 				self.skinName = "MessageBoxSimple"
