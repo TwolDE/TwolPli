@@ -25,6 +25,33 @@ caid_data = (
 	("0x5581", "0x5581", "BulCrypt", "B2", False )
 )
 
+# stream type to codec map
+codec_data = {
+	-1: "N/A",
+	0: "MPEG2",
+	1: "AVC",
+	2: "H263",
+	3: "VC1",
+	4: "MPEG4-VC",
+	5: "VC1-SM",
+	6: "MPEG1",
+	7: "HEVC",
+	8: "VB8",
+	9: "VB9",
+	10: "XVID",
+	11: "N/A 11",
+	12: "N/A 12",
+	13: "DIVX 3.11",
+	14: "DIVX 4",
+	15: "DIVX 5",
+	16: "AVC",
+	17: "N/A 17",
+	18: "VB6",
+	19: "N/A 19",
+	20: "N/A 20",
+	21: "SPARK",
+}
+
 def addspace(text):
 	if text:
 		text += " "
@@ -128,7 +155,7 @@ class PliExtraInfo(Poll, Converter, object):
 		return str(xres) + "x" + str(yres) + mode + fps
 
 	def createVideoCodec(self, info):
-		return ("MPEG2", "AVC", "MPEG1", "MPEG4-VC", "VC1", "VC1-SM", "HEVC", "")[info.getInfo(iServiceInformation.sVideoType)]
+		return codec_data.get(info.getInfo(iServiceInformation.sVideoType), "N/A")
 
 	def createPIDInfo(self, info):
 		vpid = info.getInfo(iServiceInformation.sVideoPID)
