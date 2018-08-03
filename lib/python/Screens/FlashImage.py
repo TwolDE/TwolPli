@@ -404,7 +404,7 @@ class MultibootSelection(SelectImage):
 			slot = self.currentSelected[0][1]
 			model = HardwareInfo().get_machine_name()
 			if 'coherent_poll=2M' in open("/proc/cmdline", "r").read():
-				shutil.copyfile("/sta/STARTUP_%s" % slot, "/stc/STARTUP")
+				shutil.copyfile("/sta/STARTUP_%s" % slot, "/sta/STARTUP")
 			else:
 				if slot < 12:
 					startupFileContents = "boot emmcflash0.kernel%s 'root=/dev/mmcblk0p%s rw rootwait %s_4.boxmode=1'\n" % (slot, slot * 2 + 1, model)
