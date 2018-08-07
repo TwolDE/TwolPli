@@ -68,7 +68,7 @@ SystemInfo["HasBypassEdidChecking"] = fileCheck("/proc/stb/hdmi/bypass_edid_chec
 SystemInfo["HasColorspace"] = fileCheck("/proc/stb/video/hdmi_colorspace")
 SystemInfo["HasColorspaceSimple"] = SystemInfo["HasColorspace"] and HardwareInfo().get_device_model() in "vusolo4k"
 SystemInfo["HasMultichannelPCM"] = fileCheck("/proc/stb/audio/multichannel_pcm")
-SystemInfo["HasMMC"] = fileExists("/proc/cmdline") and "root=/dev/mmcblk" in open("/proc/cmdline", "r").read()
+SystemInfo["HasMMC"] = fileHas("/proc/cmdline", "root=/dev/mmcblk")
 SystemInfo["HasTranscoding"] = pathExists("/proc/stb/encoder/0") or fileCheck("/dev/bcm_enc0")
 SystemInfo["HasH265Encoder"] = fileHas("/proc/stb/encoder/0/vcodec_choices", "h265")
 SystemInfo["CanNotDoSimultaneousTranscodeAndPIP"] = HardwareInfo().get_device_model() in "vusolo4k"
@@ -95,6 +95,7 @@ SystemInfo["HasOfflineDecoding"] = HardwareInfo().get_device_model() not in ('os
 SystemInfo["canFlashWithOfgwrite"] = not HardwareInfo().get_device_model().startswith("dm")
 SystemInfo["canMultiBoot"] = HardwareInfo().get_device_model() in ('hd51', 'h7', 'vs1500', 'e4hd') and (1, 4) or HardwareInfo().get_device_model() in ('gbue4k', 'gbquad4k') and (3, 3)
 SystemInfo["canMode12"] = HardwareInfo().get_device_model() in ("hd51", "vs1500") and '192M' or HardwareInfo().get_device_model() in ("h7") and '200M'
+SystemInfo["HasGB7252"] = fileHas("/proc/cmdline", "coherent_poll=2M")
 SystemInfo["CanDownmixDTSHD"] = fileExists("/proc/stb/audio/dtshd_choices") and fileCheck("/proc/stb/audio/dtshd")
 SystemInfo["CanDownmixWMApro"] = fileExists("/proc/stb/audio/wmapro_choices") and fileCheck("/proc/stb/audio/wmapro")
 SystemInfo["CanAC3plusTranscode"] = fileExists("/proc/stb/audio/ac3plus_choices") and fileCheck("/proc/stb/audio/ac3plus")

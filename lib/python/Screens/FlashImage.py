@@ -403,7 +403,7 @@ class MultibootSelection(SelectImage):
 		if self.currentSelected[0][1] != "Waiter":
 			slot = self.currentSelected[0][1]
 			model = HardwareInfo().get_machine_name()
-			if 'coherent_poll=2M' in open("/proc/cmdline", "r").read():
+			if SystemInfo["HasGB7252"]:
 				shutil.copyfile("/sta/STARTUP_%s" % slot, "/sta/STARTUP")
 			else:
 				if slot < 12:
