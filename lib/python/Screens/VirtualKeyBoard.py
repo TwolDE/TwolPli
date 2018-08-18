@@ -30,14 +30,13 @@ class VirtualKeyBoardEntryComponent:
 	def __init__(self):
 		pass
 
-# For more information read the documentation here https://github.com/OpenPLi/enigma2/blob/develop/doc/VIRTUALKEYBOARD
+# For more information see /doc/VIRTUALKEYBOARD
 
 class VirtualKeyBoard(Screen, HelpableScreen):
 	def __init__(self, session, title=_("Virtual KeyBoard Text:"), **kwargs):
 		Screen.__init__(self, session)
 		HelpableScreen.__init__(self)
 		prompt = title  # Title should only be used for screen titles!
-		print "[VirtualKeyBoard] DEBUG:", resolveFilename(SCOPE_CURRENT_SKIN, "buttons/vkey_bg.png")
 		self.key_bg = LoadPixmap(path=resolveFilename(SCOPE_CURRENT_SKIN, "buttons/vkey_bg.png"))
 		self.key_red_bg = LoadPixmap(path=resolveFilename(SCOPE_CURRENT_SKIN, "buttons/vkey_red.png"))
 		self.key_green_bg = LoadPixmap(path=resolveFilename(SCOPE_CURRENT_SKIN, "buttons/vkey_green.png"))
