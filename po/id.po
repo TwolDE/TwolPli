@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-01 15:14+0200\n"
+"POT-Creation-Date: 2018-09-29 17:41+0200\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Budiarno\n"
 "Language-Team: \n"
@@ -373,11 +373,12 @@ msgstr "%2d:%02d"
 msgid "%k:%M %e/%m"
 msgstr "%k:%M %e/%m"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "%s\n"
+"Press ok for multiboot selection\n"
 "Press exit to close"
-msgstr "Tekan EXIT untuk keluar"
+msgstr ""
 
 #, python-format
 msgid "%s %d.%d"
@@ -2225,7 +2226,7 @@ msgstr ""
 msgid "Could not find installed channel list."
 msgstr "Daftar kanal terpasang tidak ditemukan."
 
-msgid "Could not find suitable media - Please insert a media (e.g. USB stick) and try again!"
+msgid "Could not find suitable media - Please remove some downloaded images or insert a media (e.g. USB stick) with sufficiant free space and try again!"
 msgstr ""
 
 msgid "Could not load medium! No disc inserted?"
@@ -2454,6 +2455,10 @@ msgstr "Lokasi film bawaan"
 
 msgid "Default settings"
 msgstr "Pengaturan bawaan"
+
+#, fuzzy
+msgid "Define the location of the EPG Cache file."
+msgstr "Atur aspek rasio layar."
 
 msgid "Delay after change voltage before switch command"
 msgstr "Tunda setelah perubahan voltase sebelum perintah switch"
@@ -4637,6 +4642,9 @@ msgstr "Local network"
 msgid "Location"
 msgstr "Location"
 
+msgid "Location EPG Cache file"
+msgstr ""
+
 msgid "Location for instant recordings"
 msgstr "Location for instant recordings"
 
@@ -6266,6 +6274,10 @@ msgstr "Really exit the subservices quickzap?"
 msgid "Really reboot now?"
 msgstr "Yakin ingin reboot sekarang?"
 
+#, fuzzy
+msgid "Really restart in debug mode now?"
+msgstr "Yakin ingin restart sekarang?"
+
 msgid "Really restart now?"
 msgstr "Yakin ingin restart sekarang?"
 
@@ -6537,6 +6549,10 @@ msgid "Restart cardserver"
 msgstr "start cut here"
 
 msgid "Restart enigma"
+msgstr "Restart Enigma"
+
+#, fuzzy
+msgid "Restart enigma in debug mode"
 msgstr "Restart Enigma"
 
 msgid "Restart network"
@@ -8537,6 +8553,10 @@ msgid ""
 msgstr ""
 "Antarmuka pengguna rx anda sedang restart\n"
 "disebabkan error pada file mytest.py"
+
+#, fuzzy
+msgid "The user interface of your receiver is restarting in debug mode"
+msgstr "Antarmuka pengguna rx anda sedang restart"
 
 msgid ""
 "The wireless LAN plugin is not installed!\n"

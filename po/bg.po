@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: enigma2 3.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-01 15:14+0200\n"
+"POT-Creation-Date: 2018-09-29 17:41+0200\n"
 "PO-Revision-Date: 2018-05-01 21:32+0300\n"
 "Last-Translator: Мартин Петков <marto74bg@yahoo.co.uk>\n"
 "Language-Team: Bulgarian\n"
@@ -376,10 +376,9 @@ msgstr "%k:%M %e/%m"
 #, python-format
 msgid ""
 "%s\n"
+"Press ok for multiboot selection\n"
 "Press exit to close"
 msgstr ""
-"%s\n"
-"Натиснете изход за затваряне"
 
 #, python-format
 msgid "%s %d.%d"
@@ -2203,7 +2202,8 @@ msgstr "Бряг на Слоновата Кост"
 msgid "Could not find installed channel list."
 msgstr "Не може да се открие инсталиран списък с канали."
 
-msgid "Could not find suitable media - Please insert a media (e.g. USB stick) and try again!"
+#, fuzzy
+msgid "Could not find suitable media - Please remove some downloaded images or insert a media (e.g. USB stick) with sufficiant free space and try again!"
 msgstr "Не може да се открие пододящ носител. Моля поставете, например USB флашка и опитайте отново!"
 
 msgid "Could not load medium! No disc inserted?"
@@ -2427,6 +2427,10 @@ msgstr "Местоположение на филмите по подразбир
 
 msgid "Default settings"
 msgstr "Стандартни Настройки"
+
+#, fuzzy
+msgid "Define the location of the EPG Cache file."
+msgstr "Настройте формата на картината."
 
 msgid "Delay after change voltage before switch command"
 msgstr "Закъснение след изменение напрежението преди команда за превключв."
@@ -4605,6 +4609,9 @@ msgstr "Локална Мрежа"
 msgid "Location"
 msgstr "Местоположение"
 
+msgid "Location EPG Cache file"
+msgstr ""
+
 msgid "Location for instant recordings"
 msgstr "Местоположение за незабавни записи"
 
@@ -6211,6 +6218,10 @@ msgstr "Изход от бързо превключване на подкана�
 msgid "Really reboot now?"
 msgstr "Да рестартирам ли сега?"
 
+#, fuzzy
+msgid "Really restart in debug mode now?"
+msgstr "Да рестартирам ли сега?"
+
 msgid "Really restart now?"
 msgstr "Да рестартирам ли сега?"
 
@@ -6480,6 +6491,10 @@ msgid "Restart cardserver"
 msgstr "Рестарт на кардсървъра"
 
 msgid "Restart enigma"
+msgstr "Рестарт енигма"
+
+#, fuzzy
+msgid "Restart enigma in debug mode"
 msgstr "Рестарт енигма"
 
 msgid "Restart network"
@@ -8468,6 +8483,10 @@ msgid ""
 msgstr ""
 "Потребителският интерфейс на приемника се рестартира\n"
 "поради грешка в mytest.py"
+
+#, fuzzy
+msgid "The user interface of your receiver is restarting in debug mode"
+msgstr "Потребителският интерфейс на приемника се рестартира"
 
 msgid ""
 "The wireless LAN plugin is not installed!\n"

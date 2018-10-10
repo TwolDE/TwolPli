@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-01 15:14+0200\n"
+"POT-Creation-Date: 2018-09-29 17:41+0200\n"
 "PO-Revision-Date: \n"
 "Last-Translator: 王彪 <satfan@163.com>\n"
 "Language-Team: 中國\n"
@@ -361,6 +361,7 @@ msgstr ""
 #, python-format
 msgid ""
 "%s\n"
+"Press ok for multiboot selection\n"
 "Press exit to close"
 msgstr ""
 
@@ -2180,7 +2181,7 @@ msgstr ""
 msgid "Could not find installed channel list."
 msgstr ""
 
-msgid "Could not find suitable media - Please insert a media (e.g. USB stick) and try again!"
+msgid "Could not find suitable media - Please remove some downloaded images or insert a media (e.g. USB stick) with sufficiant free space and try again!"
 msgstr ""
 
 msgid "Could not load medium! No disc inserted?"
@@ -2405,6 +2406,9 @@ msgstr "預設錄影位置"
 
 msgid "Default settings"
 msgstr "預設設定"
+
+msgid "Define the location of the EPG Cache file."
+msgstr ""
 
 msgid "Delay after change voltage before switch command"
 msgstr ""
@@ -4569,6 +4573,9 @@ msgstr ""
 msgid "Location"
 msgstr "位置"
 
+msgid "Location EPG Cache file"
+msgstr ""
+
 msgid "Location for instant recordings"
 msgstr "即時錄製位置"
 
@@ -6194,6 +6201,10 @@ msgstr "退出字幕快速切換?"
 msgid "Really reboot now?"
 msgstr "立即重啟(Reboot)?"
 
+#, fuzzy
+msgid "Really restart in debug mode now?"
+msgstr "立即重啟(Restart)?"
+
 msgid "Really restart now?"
 msgstr "立即重啟(Restart)?"
 
@@ -6466,6 +6477,9 @@ msgid "Restart cardserver"
 msgstr "從這裏開始剪輯"
 
 msgid "Restart enigma"
+msgstr ""
+
+msgid "Restart enigma in debug mode"
 msgstr ""
 
 msgid "Restart network"
@@ -8451,6 +8465,9 @@ msgstr ""
 msgid ""
 "The user interface of your receiver is restarting\n"
 "due to an error in mytest.py"
+msgstr ""
+
+msgid "The user interface of your receiver is restarting in debug mode"
 msgstr ""
 
 msgid ""

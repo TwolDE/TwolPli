@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-01 15:14+0200\n"
+"POT-Creation-Date: 2018-09-29 17:41+0200\n"
 "PO-Revision-Date: 2018-02-27 19:37+0100\n"
 "Last-Translator: blzr <blzr@o2.pl>\n"
 "Language-Team: \n"
@@ -387,10 +387,9 @@ msgstr ""
 #, python-format
 msgid ""
 "%s\n"
+"Press ok for multiboot selection\n"
 "Press exit to close"
 msgstr ""
-"%s\n"
-"Wciśnij exit żeby zamknąć"
 
 #, python-format
 msgid "%s %d.%d"
@@ -2214,7 +2213,8 @@ msgstr "Wybrzeże Kości Słoniowej"
 msgid "Could not find installed channel list."
 msgstr "Nie znaleziono zainstalowanej listy kanałów. "
 
-msgid "Could not find suitable media - Please insert a media (e.g. USB stick) and try again!"
+#, fuzzy
+msgid "Could not find suitable media - Please remove some downloaded images or insert a media (e.g. USB stick) with sufficiant free space and try again!"
 msgstr "Nie można znaleźć odpowiedniego nośnika, podłącz nośnik (np. USB pendrive) i spróbuj ponownie!"
 
 msgid "Could not load medium! No disc inserted?"
@@ -2438,6 +2438,10 @@ msgstr "Domyślna lokalizacja nagrań"
 
 msgid "Default settings"
 msgstr "Ustawienia domyślne"
+
+#, fuzzy
+msgid "Define the location of the EPG Cache file."
+msgstr "Skonfiguruj aspect ratio."
 
 msgid "Delay after change voltage before switch command"
 msgstr "Opóźnienie po zmianie napięcia przed komendą przełączenia"
@@ -4620,6 +4624,9 @@ msgstr "Sieć lokalna"
 msgid "Location"
 msgstr "Lokalizacja"
 
+msgid "Location EPG Cache file"
+msgstr ""
+
 msgid "Location for instant recordings"
 msgstr "Lokalizacja dla 'natychmiastowych' nagrań"
 
@@ -6225,6 +6232,10 @@ msgstr "Wyjść z subserwisów?"
 msgid "Really reboot now?"
 msgstr "Wykonać reboot teraz?"
 
+#, fuzzy
+msgid "Really restart in debug mode now?"
+msgstr "Zrestartować teraz?"
+
 msgid "Really restart now?"
 msgstr "Zrestartować teraz?"
 
@@ -6495,6 +6506,10 @@ msgid "Restart cardserver"
 msgstr "Restartuj cardserver"
 
 msgid "Restart enigma"
+msgstr "Restart enigmy"
+
+#, fuzzy
+msgid "Restart enigma in debug mode"
 msgstr "Restart enigmy"
 
 msgid "Restart network"
@@ -8489,6 +8504,10 @@ msgid ""
 msgstr ""
 "Trwa restart GUI odbiornika\n"
 "z powodu błędu w mytest.py"
+
+#, fuzzy
+msgid "The user interface of your receiver is restarting in debug mode"
+msgstr "Trwa restart GUI odbiornika"
 
 msgid ""
 "The wireless LAN plugin is not installed!\n"

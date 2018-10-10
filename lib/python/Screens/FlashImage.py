@@ -83,7 +83,7 @@ class SelectImage(Screen):
 
 			for media in getNonNetworkMediaMounts():
 				if not(SystemInfo['HasMMC'] and "/mmc" in media):
-					getImages(media, ["%s/%s" % (media, x) for x in os.listdir(media) if x.endswith('.zip')])
+					getImages(media, [os.path.join(media, x) for x in os.listdir(media) if x.endswith('.zip')])
 					if "imagebackups" in os.listdir(media):
 						media = "%s/imagebackups" % media
 						if os.path.isdir(media) and not os.path.islink(media) and not os.path.ismount(media):
@@ -188,6 +188,8 @@ class FlashImage(Screen):
 		{
 			"cancel": self.abort,
 			"red": self.abort,
+			"ok": self.ok,
+			"green": self.ok,
 		}, -1)
 
 		self.delay = eTimer()
@@ -247,7 +249,6 @@ class FlashImage(Screen):
 			self.destination = findmedia(os.path.isfile(BACKUP_SCRIPT) and config.plugins.autobackup.where.value or "/media/hdd")
 
 			if self.destination:
-
 				destination = "/".join([self.destination, 'imagebackups'])
 				self.zippedimage = "://" in self.source and "/".join([destination, self.imagename]) or self.source
 				self.unzippedimage = "/".join([destination, '%s.unzipped' % self.imagename[:-4]])
@@ -335,8 +336,8 @@ class FlashImage(Screen):
 	def FlashimageDone(self, data, retval, extra_args):
 		self.containerofgwrite = None
 		if retval == 0:
-			self["header"].setText(_("Flashing image successfull"))
-			self["info"].setText(_("%s\nPress exit to close") % self.imagename)
+			self["header"].setText(_("Flashing image succesfull"))
+			self["info"].setText(_("%s\nPress ok for multiboot selection\nPress exit to close") % self.imagename)
 			self["progress"].hide()
 		else:
 			self.session.openWithCallback(self.abort, MessageBox, _("Flashing image was not successfull\n%s") % self.imagename, type=MessageBox.TYPE_ERROR, simple=True)
@@ -349,6 +350,12 @@ class FlashImage(Screen):
 		if self.containerbackup:
 			self.containerbackup.killAll()
 		self.close()
+
+	def ok(self):
+		if self["header"].text == _("Flashing image succesfull"):
+			self.session.openWithCallback(self.abort, MultibootSelection)
+		else:
+			return 0
 
 class MultibootSelection(SelectImage):
 	def __init__(self, session, *args):

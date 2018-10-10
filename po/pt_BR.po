@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: enigma2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-01 15:14+0200\n"
+"POT-Creation-Date: 2018-09-29 17:41+0200\n"
 "PO-Revision-Date: 2013-10-20 19:13-0300\n"
 "Last-Translator: Diogo <pingflood@gmail.com>\n"
 "Language-Team: Traduzido por Frank Viana <franksrviana@gmail.com>\n"
@@ -376,6 +376,7 @@ msgstr ""
 #, python-format
 msgid ""
 "%s\n"
+"Press ok for multiboot selection\n"
 "Press exit to close"
 msgstr ""
 
@@ -2211,7 +2212,7 @@ msgstr ""
 msgid "Could not find installed channel list."
 msgstr "Não foi possível encontrar a lista de canais instalados."
 
-msgid "Could not find suitable media - Please insert a media (e.g. USB stick) and try again!"
+msgid "Could not find suitable media - Please remove some downloaded images or insert a media (e.g. USB stick) with sufficiant free space and try again!"
 msgstr ""
 
 msgid "Could not load medium! No disc inserted?"
@@ -2437,6 +2438,10 @@ msgstr "Diretório padrão das gravações"
 
 msgid "Default settings"
 msgstr "Configuração padrão"
+
+#, fuzzy
+msgid "Define the location of the EPG Cache file."
+msgstr "Configurar proporção da tela."
 
 msgid "Delay after change voltage before switch command"
 msgstr ""
@@ -4608,6 +4613,9 @@ msgstr "Rede Local"
 msgid "Location"
 msgstr "Caminho"
 
+msgid "Location EPG Cache file"
+msgstr ""
+
 msgid "Location for instant recordings"
 msgstr "Diretório das gravações instantâneas"
 
@@ -6236,6 +6244,10 @@ msgstr "Deseja realmente sair?"
 msgid "Really reboot now?"
 msgstr "Reiniciar agora?"
 
+#, fuzzy
+msgid "Really restart in debug mode now?"
+msgstr "Reiniciar agora?"
+
 msgid "Really restart now?"
 msgstr "Reiniciar agora?"
 
@@ -6507,6 +6519,10 @@ msgid "Restart cardserver"
 msgstr "Iniciar corte aqui"
 
 msgid "Restart enigma"
+msgstr "Reiniciar interface"
+
+#, fuzzy
+msgid "Restart enigma in debug mode"
 msgstr "Reiniciar interface"
 
 msgid "Restart network"
@@ -8506,6 +8522,10 @@ msgid ""
 msgstr ""
 "A interface do receptor está reiniciando\n"
 "devido a um erro em mytest.py"
+
+#, fuzzy
+msgid "The user interface of your receiver is restarting in debug mode"
+msgstr "Reiniciando interface. Aguarde..."
 
 msgid ""
 "The wireless LAN plugin is not installed!\n"
