@@ -787,10 +787,10 @@ void eListboxServiceContent::paint(gPainter &painter, eWindowStyle &style, const
 				{
 					if ( isPlayable && service_info && !service_info->getEvent(*m_cursor, evt) )
 					{
-						std::string name = evt->getEventName();
-						if (name.empty())
-							continue;
 						text = evt->getEventName();
+						if (text.empty())
+							continue;
+						std::replace(text.begin(), text.end(), '\n', ' ');
 						if (serviceAvail)
 						{
 							if (!selected && m_color_set[eventForeground])
@@ -888,7 +888,7 @@ void eListboxServiceContent::paint(gPainter &painter, eWindowStyle &style, const
 								painter.blitScale(piconPixmap,
 									eRect(area.left(), area.top(), iconWidth, area.height()),
 									area,
-									gPainter::BT_ALPHABLEND | gPainter::BT_KEEP_ASPECT_RATIO);
+									gPainter::BT_ALPHABLEND | gPainter::BT_KEEP_ASPECT_RATIO | gPainter::BT_HALIGN_CENTER | gPainter::BT_VALIGN_CENTER);
 								painter.clippop();
 							}
 						}

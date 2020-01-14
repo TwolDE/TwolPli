@@ -32,9 +32,6 @@ def getProcMounts():
 		item[1] = item[1].replace('\\040', ' ')
 	return result
 
-def getNonNetworkMediaMounts():
-	return [x[1] for x in getProcMounts() if x[1].startswith("/media/") and not x[0].startswith("//")]
-
 def isFileSystemSupported(filesystem):
 	try:
 		for fs in open('/proc/filesystems', 'r'):
@@ -91,7 +88,7 @@ class Harddisk:
 		if self.type == DEVTYPE_UDEV:
 			self.dev_path = '/dev/' + self.device
 			self.disk_path = self.dev_path
-			self.card = "sdhci" in self.phys_path
+			self.card = "sdhci" in self.phys_path or "mmc" in self.device
 
 		elif self.type == DEVTYPE_DEVFS:
 			tmp = readFile(self.sysfsPath('dev')).split(':')
@@ -111,7 +108,7 @@ class Harddisk:
 			self.card = self.device[:2] == "hd" and "host0" not in self.dev_path
 
 		print "[Harddisk] new device", self.device, '->', self.dev_path, '->', self.disk_path
-		if not removable and not self.card:
+		if (self.internal or not removable) and not self.card:
 			self.startIdle()
 
 	def __lt__(self, ob):
@@ -119,7 +116,7 @@ class Harddisk:
 
 	def partitionPath(self, n):
 		if self.type == DEVTYPE_UDEV:
-			if self.dev_path.startswith('/dev/mmcblk0'):
+			if self.dev_path.startswith('/dev/mmcblk'):
 				return self.dev_path + "p" + n
 			else:
 				return self.dev_path + n
@@ -185,7 +182,7 @@ class Harddisk:
 				vendor = readFile(self.sysfsPath('device/vendor'))
 				model = readFile(self.sysfsPath('device/model'))
 				return vendor + '(' + model + ')'
-			elif self.device.startswith('mmcblk0'):
+			elif self.device.startswith('mmcblk'):
 				return readFile(self.sysfsPath('device/name'))
 			else:
 				raise Exception, "[Harddisk] no hdX or sdX or mmcX"
@@ -288,7 +285,7 @@ class Harddisk:
 		res = -1
 		if self.type == DEVTYPE_UDEV:
 			# we can let udev do the job, re-read the partition table
-			res = os.system('hdparm -z ' + self.disk_path)
+			res = os.system("hdparm -z %s" % self.disk_path)
 			# give udev some time to make the mount, which it will do asynchronously
 			from time import sleep
 			sleep(3)
@@ -594,7 +591,7 @@ class HarddiskManager:
 			("/media/hdd", _("Hard disk")),
 			("/media/card", _("Card")),
 			("/media/cf", _("Compact flash")),
-			("/media/mmc1", _("MMC card")),
+			("/media/mmc", _("MMC card")),
 			("/media/net", _("Network mount")),
 			("/media/net1", _("Network mount %s") % ("1")),
 			("/media/net2", _("Network mount %s") % ("2")),
@@ -614,15 +611,25 @@ class HarddiskManager:
 		removable = False
 		blacklisted = False
 		is_cdrom = False
+		is_mmc = False
 		partitions = []
 		try:
 			if os.path.exists(devpath + "/removable"):
 				removable = bool(int(readFile(devpath + "/removable")))
 			if os.path.exists(devpath + "/dev"):
-				dev = int(readFile(devpath + "/dev").split(':')[0])
+				dev = readFile(devpath + "/dev")
+				subdev = False if int(dev.split(':')[1]) % 32 == 0 else True
+				dev = int(dev.split(':')[0])
 			else:
 				dev = None
-			blacklisted = dev in [1, 7, 31, 253, 254] + (SystemInfo["HasMMC"] and [179] or []) #ram, loop, mtdblock, romblock, ramzswap, mmc
+				subdev = False
+			# blacklist ram, loop, mtdblock, romblock, ramzswap
+			blacklisted = dev in [1, 7, 31, 253, 254] 
+			# blacklist non-root eMMC devices
+			if not blacklisted and dev == 179:
+				is_mmc = True
+				if (SystemInfo['BootDevice'] and blockdev.startswith(SystemInfo['BootDevice'])) or subdev:
+					blacklisted = True
 			if blockdev[0:2] == 'sr':
 				is_cdrom = True
 			if blockdev[0:2] == 'hd':
@@ -633,7 +640,7 @@ class HarddiskManager:
 				except IOError:
 					error = True
 			# check for partitions
-			if not is_cdrom and os.path.exists(devpath):
+			if not is_cdrom and not is_mmc and os.path.exists(devpath):
 				for partition in os.listdir(devpath):
 					if partition[0:len(blockdev)] != blockdev:
 						continue
@@ -693,7 +700,7 @@ class HarddiskManager:
 				self.on_partition_list_change("add", p)
 			# see if this is a harddrive
 			l = len(device)
-			if l and (not device[l-1].isdigit() or device == 'mmcblk0'):
+			if l and (not device[l-1].isdigit() or device.startswith('mmcblk')):
 				self.hdd.append(Harddisk(device, removable))
 				self.hdd.sort()
 				SystemInfo["Harddisk"] = True

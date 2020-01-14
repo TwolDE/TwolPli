@@ -17,7 +17,7 @@ from Tools.FallbackTimer import FallbackTimerList
 from time import time
 from timer import TimerEntry as RealTimerEntry
 from ServiceReference import ServiceReference
-from enigma import eServiceReference
+from enigma import eServiceReference, eEPGCache
 
 class TimerEditList(Screen):
 	EMPTY = 0
@@ -25,6 +25,7 @@ class TimerEditList(Screen):
 	DISABLE = 2
 	CLEANUP = 3
 	DELETE = 4
+	STOP = 5
 
 	def __init__(self, session):
 		Screen.__init__(self, session)
@@ -42,6 +43,7 @@ class TimerEditList(Screen):
 		self["key_green"] = StaticText(_("Add"))
 		self["key_yellow"] = StaticText("")
 		self["key_blue"] = StaticText("")
+		self["key_info"] = StaticText("")
 
 		self["description"] = Label("")
 
@@ -71,7 +73,7 @@ class TimerEditList(Screen):
 		if result is None:
 			self.closeProtectedScreen()
 		elif not result:
-			self.session.openWithCallback(self.close(), MessageBox, _("The pin code you entered is wrong."), MessageBox.TYPE_ERROR, timeout=3)
+			self.session.openWithCallback(self.close(), MessageBox, _("The pin code you entered is wrong."), MessageBox.TYPE_ERROR, timeout=5)
 
 	def closeProtectedScreen(self, result=None):
 		self.close(None)
@@ -93,7 +95,7 @@ class TimerEditList(Screen):
 		self.updateState()
 
 	def toggleDisabledState(self):
-		cur=self["timerlist"].getCurrent()
+		cur = self["timerlist"].getCurrent()
 		timer_changed = True
 		if cur:
 			t = cur
@@ -157,12 +159,35 @@ class TimerEditList(Screen):
 	def updateState(self):
 		cur = self["timerlist"].getCurrent()
 		if cur:
+			if cur.external:
+				self["key_info"].setText("")
+			else:
+				self["key_info"].setText(_("Info"))
 			text = cur.description
+			event = eEPGCache.getInstance().lookupEventId(cur.service_ref.ref, cur.eit)
+			if event:
+				ext_description = event.getExtendedDescription()
+				short_description = event.getShortDescription()
+				if text != short_description:
+					if text and short_description:
+						text = _("Timer:") + " " + text + "\n\n" + _("EPG:") + " " + short_description
+					elif short_description:
+						text = short_description
+						cur.description = short_description
+				if ext_description and ext_description != text:
+					if text:
+						text += "\n\n" + ext_description
+					else:
+						text = ext_description
 			if not cur.conflict_detection:
-				text += _("\nConflict detection disabled!")
+				text = _("\nConflict detection disabled!") + "\n\n" + text
 			self["description"].setText(text)
 			stateRunning = cur.state in (1, 2)
-			if self.key_red_choice != self.DELETE:
+			if cur.state == 2 and self.key_red_choice != self.STOP:
+				self["actions"].actions.update({"red":self.stopTimerQuestion})
+				self["key_red"].setText(_("Stop"))
+				self.key_red_choice = self.STOP
+			elif cur.state != 2 and self.key_red_choice != self.DELETE:
 				self["actions"].actions.update({"red":self.removeTimerQuestion})
 				self["key_red"].setText(_("Delete"))
 				self.key_red_choice = self.DELETE
@@ -233,12 +258,14 @@ class TimerEditList(Screen):
 		self.updateState()
 
 	def showLog(self):
-		cur=self["timerlist"].getCurrent()
-		if cur:
+		cur = self["timerlist"].getCurrent()
+		if cur and not cur.external:
 			self.session.openWithCallback(self.finishedEdit, TimerLog, cur)
+		else:
+			return 0
 
 	def openEdit(self):
-		cur=self["timerlist"].getCurrent()
+		cur = self["timerlist"].getCurrent()
 		if cur:
 			self.session.openWithCallback(self.finishedEdit, TimerEntry, cur)
 
@@ -249,6 +276,11 @@ class TimerEditList(Screen):
 		if delete:
 			self.session.nav.RecordTimer.cleanup()
 			self.fallbackTimer.cleanupTimers(self.refill)
+
+	def stopTimerQuestion(self):
+		cur = self["timerlist"].getCurrent()
+		if cur:
+			self.session.openWithCallback(self.removeTimer, MessageBox, _("Do you really want to stop current event and delete timer %s?") % (cur.name))
 
 	def removeTimerQuestion(self):
 		cur = self["timerlist"].getCurrent()
@@ -293,8 +325,10 @@ class TimerEditList(Screen):
 			data = (int(time()), int(time() + 60), "", "", None)
 		else:
 			data = parseEvent(event, description = False)
-
-		self.addTimer(RecordTimerEntry(serviceref, checkOldTimers = True, dirname = preferredTimerPath(), *data))
+		timer = RecordTimerEntry(serviceref, checkOldTimers = True, dirname = preferredTimerPath(), *data)
+		timer.justplay = config.recording.timer_default_type.value == "zap"
+		timer.always_zap = config.recording.timer_default_type.value == "zap+record"
+		self.addTimer(timer)
 
 	def addTimer(self, timer):
 		self.session.openWithCallback(self.finishedAdd, TimerEntry, timer)
@@ -413,8 +447,10 @@ class TimerSanityConflict(Screen):
 
 	def showLog(self):
 		selected_timer = self["timerlist"].getCurrent()
-		if selected_timer:
+		if selected_timer and not selected_timer.external:
 			self.session.openWithCallback(self.editTimerCallBack, TimerLog, selected_timer)
+		else:
+			return 0
 
 	def editTimerCallBack(self, answer=None):
 		if answer and len(answer) > 1 and answer[0] is True:

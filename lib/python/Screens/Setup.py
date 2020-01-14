@@ -127,8 +127,8 @@ class Setup(ConfigListScreen, Screen):
 					continue
 
 				item_text = _(x.get("text", "??").encode("UTF-8"))
-				item_description = _(x.get("description", " ").encode("UTF-8"))
-				b = eval(x.text or "");
+				item_description = _(x.get("description", " ").encode("UTF-8")) # don't change
+				b = eval(x.text or "")
 				if b == "":
 					continue
 				#add to configlist
@@ -161,6 +161,9 @@ class Setup(ConfigListScreen, Screen):
 			self.force_update_list = False
 		if not (isinstance(self["config"].getCurrent()[1], ConfigBoolean) or isinstance(self["config"].getCurrent()[1], ConfigSelection)):
 			self.force_update_list = True
+
+	def run(self):
+		self.keySave()
 
 def getSetupTitle(id):
 	xmldata = setupdom.getroot()

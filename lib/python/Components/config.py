@@ -289,7 +289,7 @@ class descriptionList(choicesList):  # XXX: we might want a better name for this
 # all ids MUST be plain strings.
 #
 class ConfigSelection(ConfigElement):
-	def __init__(self, choices, default=None):
+	def __init__(self, choices, default=None, graphic=True):
 		ConfigElement.__init__(self)
 		self.choices = choicesList(choices)
 
@@ -298,6 +298,7 @@ class ConfigSelection(ConfigElement):
 
 		self._descr = None
 		self.default = self._value = self.last_value = default
+		self.graphic = graphic
 
 	def setChoices(self, choices, default=None):
 		self.choices = choicesList(choices)
@@ -318,7 +319,7 @@ class ConfigSelection(ConfigElement):
 		self.changed()
 
 	def tostring(self, val):
-		return val
+		return str(val)
 
 	def getValue(self):
 		return self._value
@@ -363,6 +364,12 @@ class ConfigSelection(ConfigElement):
 	def getMulti(self, selected):
 		if self._descr is None:
 			self._descr = self.description[self.value]
+		from config import config
+		from skin import switchPixmap
+		if self.graphic and config.usage.boolean_graphic.value == "true" and "menu_on" in switchPixmap and "menu_off" in switchPixmap:
+			pixmap = "menu_on" if self._descr in (_('True'), _('true'), _('Yes'), _('yes'), _('Enable'), _('enable'), _('Enabled'), _('enabled'), _('On'), _('on')) else "menu_off" if self._descr in (_('False'), _('false'), _('No'), _('no'), _("Disable"), _('disable'), _('Disabled'), _('disabled'), _('Off'), _('off'), _('None'), _('none')) else None
+			if pixmap:
+				return ('pixmap', switchPixmap[pixmap])
 		return ("text", self._descr)
 
 	# HTML
@@ -409,10 +416,9 @@ class ConfigBoolean(ConfigElement):
 	def getMulti(self, selected):
 		from config import config
 		from skin import switchPixmap
-		if self.graphic and config.usage.boolean_graphic.value and switchPixmap.get("menu_on", False) and switchPixmap.get("menu_off", False):
-			return ('pixmap', self.value and switchPixmap["menu_on"] or switchPixmap["menu_off"])
-		else:
-			return ("text", self.descriptions[self.value])
+		if self.graphic and config.usage.boolean_graphic.value in ("true", "only_bool") and "menu_on" in switchPixmap and "menu_off" in switchPixmap:
+			return ('pixmap', switchPixmap["menu_on" if self.value else "menu_off"])
+		return ("text", self.descriptions[self.value])
 
 	def tostring(self, value):
 		if not value:
@@ -593,7 +599,7 @@ class ConfigSequence(ConfigElement):
 			# position in the block
 			posinblock = self.marked_pos - block_len_total[blocknumber]
 
-			oldvalue = self._value[blocknumber]
+			oldvalue = abs(self._value[blocknumber]) # we are using abs in order to allow change negative values like default -1 on mis
 			olddec = oldvalue % 10 ** (number_len - posinblock) - (oldvalue % 10 ** (number_len - posinblock - 1))
 			newvalue = oldvalue - olddec + (10 ** (number_len - posinblock - 1) * number)
 
@@ -1444,7 +1450,7 @@ class ConfigLocations(ConfigElement):
 	def isChanged(self):
 		sv = self.saved_value
 		locations = self.locations
-		if val is None and not locations:
+		if sv is None and not locations:
 			return False
 		return self.tostring([x[0] for x in locations]) != sv
 
@@ -1814,7 +1820,7 @@ class ConfigFile:
 		if len(names) > 1:
 			if names[0] == "config":
 				ret = self.__resolveValue(names[1:], config.content.items)
-				if ret and len(ret):
+				if ret and len(ret) or ret == "":
 					return ret
 		print "getResolvedKey", key, "failed !! (Typo??)"
 		return ""

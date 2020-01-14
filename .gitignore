@@ -37,3 +37,5 @@ aclocal-copy
 compile
 .dirstamp
 mipsel-oe-linux-libtool
+/.vs
+.vscode/

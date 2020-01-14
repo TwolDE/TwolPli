@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys, os, time
+import re
 from Tools.HardwareInfo import HardwareInfo
 
 def getVersionString():
@@ -48,13 +49,13 @@ def getEnigmaVersionString():
 		enigma_version = enigma_version [:-12]
 	return enigma_version
 
-def getGStreamerVersionString():
+def getGStreamerVersionString(cpu):
 	try:
 		from glob import glob
 		gst = [x.split("Version: ") for x in open(glob("/var/lib/opkg/info/gstreamer[0-9].[0-9].control")[0], "r") if x.startswith("Version:")][0]
 		return "%s" % gst[1].split("+")[0].replace("\n","")
 	except:
-		return _("unknown")
+		return _("Not Required") if cpu.upper().startswith('HI') else _("Not Installed")
 
 def getKernelVersionString():
 	try:
@@ -111,8 +112,13 @@ def getCPUInfoString():
 				temperature = int(open("/sys/devices/virtual/thermal/thermal_zone0/temp").read().strip())/1000
 			except:
 				pass
+		elif os.path.isfile("/proc/hisi/msp/pm_cpu"):
+			try:
+				temperature = re.search('temperature = (\d+) degree', open("/proc/hisi/msp/pm_cpu").read()).group(1)
+			except:
+				pass
 		if temperature:
-			return "%s %s MHz (%s) %s°C" % (processor, cpu_speed, ngettext("%d core", "%d cores", cpu_count) % cpu_count, temperature)
+			return "%s %s MHz (%s) %s\xb0C" % (processor, cpu_speed, ngettext("%d core", "%d cores", cpu_count) % cpu_count, temperature)
 		return "%s %s MHz (%s)" % (processor, cpu_speed, ngettext("%d core", "%d cores", cpu_count) % cpu_count)
 	except:
 		return _("undefined")

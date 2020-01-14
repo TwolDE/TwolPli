@@ -8,6 +8,7 @@ from Screens.Satconfig import NimSetup
 from Screens.InfoBar import InfoBar
 from Components.Label import Label
 from Components.Button import Button
+from Components.Sources.StaticText import StaticText
 from Components.ConfigList import ConfigList
 from Components.ConfigList import ConfigListScreen
 from Components.TunerInfo import TunerInfo
@@ -162,9 +163,11 @@ class PositionerSetup(Screen):
 			cur.get("modulation", eDVBFrontendParametersSatellite.Modulation_QPSK),
 			cur.get("rolloff", eDVBFrontendParametersSatellite.RollOff_alpha_0_35),
 			cur.get("pilot", eDVBFrontendParametersSatellite.Pilot_Unknown),
-			cur.get("is_id", 0),
+			cur.get("is_id", eDVBFrontendParametersSatellite.No_Stream_Id_Filter),
 			cur.get("pls_mode", eDVBFrontendParametersSatellite.PLS_Gold),
-			cur.get("pls_code", 0))
+			cur.get("pls_code", eDVBFrontendParametersSatellite.PLS_Default_Gold_Code),
+			cur.get("t2mi_plp_id", eDVBFrontendParametersSatellite.No_T2MI_PLP_Id),
+			cur.get("t2mi_pid", eDVBFrontendParametersSatellite.T2MI_Default_Pid))
 
 		self.tuner.tune(tp)
 		self.isMoving = False
@@ -1232,15 +1235,15 @@ class Diseqc:
 class PositionerSetupLog(Screen):
 	skin = """
 		<screen position="center,center" size="560,400" title="Positioner setup log" >
-			<ePixmap name="red"    position="0,0"   zPosition="2" size="140,40" pixmap="skin_default/buttons/red.png" transparent="1" alphatest="on" />
-			<ePixmap name="green"  position="230,0" zPosition="2" size="140,40" pixmap="skin_default/buttons/green.png" transparent="1" alphatest="on" />
-			<ePixmap name="blue"   position="420,0" zPosition="2" size="140,40" pixmap="skin_default/buttons/blue.png" transparent="1" alphatest="on" />
+			<ePixmap name="red"    position="0,0"   zPosition="2" size="140,40" pixmap="buttons/red.png" transparent="1" alphatest="on" />
+			<ePixmap name="green"  position="230,0" zPosition="2" size="140,40" pixmap="buttons/green.png" transparent="1" alphatest="on" />
+			<ePixmap name="blue"   position="420,0" zPosition="2" size="140,40" pixmap="buttons/blue.png" transparent="1" alphatest="on" />
 
 			<widget name="key_red" position="0,0" size="140,40" valign="center" halign="center" zPosition="4"  foregroundColor="white" font="Regular;20" transparent="1" shadowColor="background" shadowOffset="-2,-2" />
 			<widget name="key_green" position="230,0" size="140,40" halign="center" valign="center"  zPosition="4"  foregroundColor="white" font="Regular;20" transparent="1" shadowColor="background" shadowOffset="-2,-2" />
 			<widget name="key_blue" position="420,0" size="140,40" valign="center" halign="center" zPosition="4"  foregroundColor="white" font="Regular;20" transparent="1" shadowColor="background" shadowOffset="-2,-2" />
 
-			<ePixmap alphatest="on" pixmap="skin_default/icons/clock.png" position="480,383" size="14,14" zPosition="3"/>
+			<ePixmap alphatest="on" pixmap="icons/clock.png" position="480,383" size="14,14" zPosition="3"/>
 			<widget font="Regular;18" halign="left" position="505,380" render="Label" size="55,20" source="global.CurrentTime" transparent="1" valign="center" zPosition="3">
 				<convert type="ClockToText">Default</convert>
 			</widget>
@@ -1251,7 +1254,7 @@ class PositionerSetupLog(Screen):
 		self.session = session
 		Screen.__init__(self, session)
 		self.setTitle(_("Positioner setup log"))
-		self["key_red"] = Button(_("Exit/OK"))
+		self["key_red"] = Button(_("Exit"))
 		self["key_green"] = Button(_("Save"))
 		self["key_blue"] = Button(_("Clear"))
 		self["list"] = ScrollLabel(log.getvalue())
@@ -1291,9 +1294,13 @@ class PositionerSetupLog(Screen):
 
 class TunerScreen(ConfigListScreen, Screen):
 	skin = """
-		<screen position="center,center" size="520,400" title="Tune">
-			<widget name="config" position="20,10" size="460,350" scrollbarMode="showOnDemand" />
-			<widget name="introduction" position="60,360" size="450,23" halign="left" font="Regular;20" />
+		<screen position="center,center" size="520,450" title="Tune">
+			<ePixmap pixmap="buttons/red.png" position="0,0" size="140,40" alphatest="on"/>
+			<ePixmap pixmap="buttons/green.png" position="140,0" size="140,40" alphatest="on"/>
+			<widget source="key_red" render="Label" position="0,0" zPosition="1" size="140,40" font="Regular;20" halign="center" valign="center" backgroundColor="#9f1313" transparent="1"/>
+			<widget source="key_green" render="Label" position="140,0" zPosition="1" size="140,40" font="Regular;20" halign="center" valign="center" backgroundColor="#1f771f" transparent="1"/>
+			<widget name="config" position="10,50" size="500,350" scrollbarMode="showOnDemand" />
+			<widget name="introduction" position="60,420" size="450,23" halign="left" font="Regular;20" />
 		</screen>"""
 
 	def __init__(self, session, feid, fe_data):
@@ -1309,11 +1316,16 @@ class TunerScreen(ConfigListScreen, Screen):
 		self.tuning.type.addNotifier(self.tuningTypeChanged)
 		self.scan_sat.system.addNotifier(self.systemChanged)
 
-		self["actions"] = NumberActionMap(["SetupActions"],
+		self["actions"] = NumberActionMap(["SetupActions", "ColorActions"],
 		{
 			"ok": self.keyGo,
 			"cancel": self.keyCancel,
+			"red": self.keyCancel,
+			"green": self.keyGo,
 		}, -2)
+
+		self["key_red"] = StaticText(_("Cancel"))
+		self["key_green"] = StaticText(_("OK"))
 		self["introduction"] = Label(_("Press OK, save and exit..."))
 
 	def createConfig(self, frontendData):
@@ -1343,7 +1355,7 @@ class TunerScreen(ConfigListScreen, Screen):
 			"fec_s2": eDVBFrontendParametersSatellite.FEC_9_10,
 			"modulation": eDVBFrontendParametersSatellite.Modulation_QPSK,
 			"pls_mode": eDVBFrontendParametersSatellite.PLS_Gold,
-			"pls_code": 0 }
+			"pls_code": eDVBFrontendParametersSatellite.PLS_Default_Gold_Code }
 		if frontendData is not None:
 			ttype = frontendData.get("tuner_type", "UNKNOWN")
 			defaultSat["system"] = frontendData.get("system", eDVBFrontendParametersSatellite.System_DVB_S)
@@ -1355,9 +1367,11 @@ class TunerScreen(ConfigListScreen, Screen):
 				defaultSat["fec_s2"] = frontendData.get("fec_inner", eDVBFrontendParametersSatellite.FEC_Auto)
 				defaultSat["rolloff"] = frontendData.get("rolloff", eDVBFrontendParametersSatellite.RollOff_alpha_0_35)
 				defaultSat["pilot"] = frontendData.get("pilot", eDVBFrontendParametersSatellite.Pilot_Unknown)
-				defaultSat["is_id"] = frontendData.get("is_id", 0)
+				defaultSat["is_id"] = frontendData.get("is_id", eDVBFrontendParametersSatellite.No_Stream_Id_Filter)
 				defaultSat["pls_mode"] = frontendData.get("pls_mode", eDVBFrontendParametersSatellite.PLS_Gold)
-				defaultSat["pls_code"] = frontendData.get("pls_code", 0)
+				defaultSat["pls_code"] = frontendData.get("pls_code", eDVBFrontendParametersSatellite.PLS_Default_Gold_Code)
+				defaultSat["t2mi_plp_id"] = frontendData.get("t2mi_plp_id", eDVBFrontendParametersSatellite.No_T2MI_PLP_Id)
+				defaultSat["t2mi_pid"] = frontendData.get("t2mi_pid", eDVBFrontendParametersSatellite.T2MI_Default_Pid)
 			else:
 				defaultSat["fec"] = frontendData.get("fec_inner", eDVBFrontendParametersSatellite.FEC_Auto)
 			defaultSat["modulation"] = frontendData.get("modulation", eDVBFrontendParametersSatellite.Modulation_QPSK)
@@ -1415,7 +1429,9 @@ class TunerScreen(ConfigListScreen, Screen):
 			(eDVBFrontendParametersSatellite.PLS_Root, _("Root")),
 			(eDVBFrontendParametersSatellite.PLS_Gold, _("Gold")),
 			(eDVBFrontendParametersSatellite.PLS_Combo, _("Combo"))])
-		self.scan_sat.pls_code = ConfigInteger(default = defaultSat.get("pls_code", 0), limits = (0, 262142))
+		self.scan_sat.pls_code = ConfigInteger(default = defaultSat.get("pls_code", eDVBFrontendParametersSatellite.PLS_Default_Gold_Code), limits = (0, 262142))
+		self.scan_sat.t2mi_plp_id = ConfigInteger(default = defaultSat.get("t2mi_plp_id", eDVBFrontendParametersSatellite.No_T2MI_PLP_Id), limits = (0, 255))
+		self.scan_sat.t2mi_pid = ConfigInteger(default = defaultSat.get("t2mi_pid", eDVBFrontendParametersSatellite.T2MI_Default_Pid), limits = (0, 8191))
 
 	def initialSetup(self):
 		currtp = self.transponderToString([None, self.scan_sat.frequency.value, self.scan_sat.symbolrate.value, self.scan_sat.polarization.value])
@@ -1453,6 +1469,8 @@ class TunerScreen(ConfigListScreen, Screen):
 					self.list.append(getConfigListEntry(_('Input Stream ID'), self.scan_sat.is_id))
 					self.list.append(getConfigListEntry(_('PLS Mode'), self.scan_sat.pls_mode))
 					self.list.append(getConfigListEntry(_('PLS Code'), self.scan_sat.pls_code))
+				self.list.append(getConfigListEntry(_('T2MI PLP ID'), self.scan_sat.t2mi_plp_id))
+				self.list.append(getConfigListEntry(_('T2MI PID'), self.scan_sat.t2mi_pid))
 		else: # "predefined_transponder"
 			self.list.append(getConfigListEntry(_("Transponder"), self.tuning.transponder))
 			currtp = self.transponderToString([None, self.scan_sat.frequency.value, self.scan_sat.symbolrate.value, self.scan_sat.polarization.value])
@@ -1498,7 +1516,7 @@ class TunerScreen(ConfigListScreen, Screen):
 		ConfigListScreen.keyRight(self)
 
 	def keyGo(self):
-		returnvalue = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 1)
+		returnvalue = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 1, -1)
 		satpos = int(self.tuning.sat.value)
 		if self.tuning.type.value == "manual_transponder":
 			if self.scan_sat.system.value == eDVBFrontendParametersSatellite.System_DVB_S2:
@@ -1518,11 +1536,13 @@ class TunerScreen(ConfigListScreen, Screen):
 				self.scan_sat.pilot.value,
 				self.scan_sat.is_id.value,
 				self.scan_sat.pls_mode.value,
-				self.scan_sat.pls_code.value)
+				self.scan_sat.pls_code.value,
+				self.scan_sat.t2mi_plp_id.value,
+				self.scan_sat.t2mi_pid.value)
 		elif self.tuning.type.value == "predefined_transponder":
 			transponder = nimmanager.getTransponders(satpos)[self.tuning.transponder.index]
 			returnvalue = (transponder[1] / 1000, transponder[2] / 1000,
-				transponder[3], transponder[4], 2, satpos, transponder[5], transponder[6], transponder[8], transponder[9], transponder[10], transponder[11], transponder[12])
+				transponder[3], transponder[4], 2, satpos, transponder[5], transponder[6], transponder[8], transponder[9], transponder[10], transponder[11], transponder[12], transponder[13], transponder[14])
 		self.close(returnvalue)
 
 	def keyCancel(self):

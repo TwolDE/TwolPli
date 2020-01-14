@@ -8,7 +8,12 @@ import os
 # STARTUP_4		        Image 4: boot emmcflash0.kernel4 'root=/dev/mmcblk0p9 rw rootwait'	NOT IN USE due to Rescue mode in mmcblk0p3
 
 def GetCurrentImage():
-	return SystemInfo["canMultiBoot"] and (int(open('/sys/firmware/devicetree/base/chosen/bootargs', 'r').read().replace('\0', '').split('mmcblk0p')[1].split(' ')[0])-SystemInfo["canMultiBoot"][0])/2
+	if SystemInfo["canMultiBoot"]:
+		slot = [x[-1] for x in open('/sys/firmware/devicetree/base/chosen/bootargs', 'r').read().split() if x.startswith('rootsubdir')]
+		if slot:
+			return int(slot[0])
+		else:
+			return (int(open('/sys/firmware/devicetree/base/chosen/bootargs', 'r').read()[:-1].split("%sp" % SystemInfo["canMultiBoot"][2])[1].split(' ')[0])-SystemInfo["canMultiBoot"][0])/2
 
 def GetCurrentImageMode():
 	return SystemInfo["canMultiBoot"] and SystemInfo["canMode12"] and int(open('/sys/firmware/devicetree/base/chosen/bootargs', 'r').read().replace('\0', '').split('=')[-1])
@@ -19,7 +24,7 @@ class GetImagelist():
 
 	def __init__(self, callback):
 		if SystemInfo["canMultiBoot"]:
-			(self.firstslot, self.numberofslots, self.mtdboot) = SystemInfo["canMultiBoot"]
+			(self.firstslot, self.numberofslots) = SystemInfo["canMultiBoot"][:2]
 			self.callback = callback
 			self.imagelist = {}
 			if not os.path.isdir('/tmp/testmount'):
@@ -30,51 +35,38 @@ class GetImagelist():
 			self.run()
 		else:	
 			callback({})
-	
+
 	def run(self):
-		self.container.ePopen('mount /dev/mmcblk0p%s /tmp/testmount' % str(self.slot * 2 + self.firstslot) if self.phase == self.MOUNT else 'umount /tmp/testmount', self.appClosed)
-			
+		if SystemInfo["HasRootSubdir"]:
+			if self.slot == 1 and os.path.islink("/dev/block/by-name/linuxrootfs"):
+				self.container.ePopen('mount /dev/block/by-name/linuxrootfs /tmp/testmount' if self.phase == self.MOUNT else 'umount /tmp/testmount', self.appClosed)
+			else:
+				self.container.ePopen('mount /dev/block/by-name/userdata /tmp/testmount' if self.phase == self.MOUNT else 'umount /tmp/testmount', self.appClosed)
+		else:
+			self.container.ePopen('mount /dev/%sp%s /tmp/testmount' % (SystemInfo["canMultiBoot"][2], str(self.slot * 2 + self.firstslot)) if self.phase == self.MOUNT else 'umount /tmp/testmount', self.appClosed)
+
 	def appClosed(self, data, retval, extra_args):
 		if retval == 0 and self.phase == self.MOUNT:
-			BuildVersion = "  "
-			Build = " "
-			build = " "
-			Creator = " " 
-			Date = " "
-			Dev = " "
-			Type = " "
-			if os.path.isfile("/tmp/testmount/usr/bin/enigma2") and os.path.isfile('/tmp/testmount/etc/image-version'):
-				file = open('/tmp/testmount/etc/image-version', 'r')
-				lines = file.read().splitlines()
-				for x in lines:
-					splitted = x.split('=')
-					if len(splitted) > 1:
-						if splitted[0].startswith("Type"):
-							Type = splitted[1].split(' ')[1]
-						elif splitted[0].startswith("Dev"):
-							Dev = splitted[1].split(' ')[1]
-						elif splitted[0].startswith("Build"):
-							Build = splitted[1].split(' ')[1]
-						elif splitted[0].startswith("creator"):
-							Creator = splitted[1].split(' ')[0]
-						elif splitted[0].startswith("build_type"):
-							build = splitted[1].split(' ')[0]
-				file.close()
-				if Type == "release":		
-					BuildVersion = " " + "rel" + " " + Build
+			def getImagename(target):
+				from datetime import datetime
+				date = datetime.fromtimestamp(os.stat(os.path.join(target, "var/lib/opkg/status")).st_mtime).strftime('%Y-%m-%d')
+				if date.startswith("1970"):
+					try:
+						date = datetime.fromtimestamp(os.stat(os.path.join(target, "usr/share/bootlogo.mvi")).st_mtime).strftime('%Y-%m-%d')
+					except:
+						pass
+					date = max(date, datetime.fromtimestamp(os.stat(os.path.join(target, "usr/bin/enigma2")).st_mtime).strftime('%Y-%m-%d'))
+				return "%s (%s)" % (open(os.path.join(target, "etc/issue")).readlines()[-2].capitalize().strip()[:-6], date)
+			if SystemInfo["HasRootSubdir"]:
+				if os.path.isfile("/tmp/testmount/linuxrootfs%s/usr/bin/enigma2" % self.slot):
+					self.imagelist[self.slot] = { 'imagename': getImagename("/tmp/testmount/linuxrootfs%s" % self.slot) }
 				else:
-					BuildVersion = " " + "dev" + " " + Build + " " + Dev
-			if os.path.isfile('/tmp/testmount/etc/version') and Build == " ":
-				version = open("/tmp/testmount/etc/version","r").read()
-				Date = "%s-%s-%s" % (version[6:8], version[4:6], version[2:4])
-				if Creator == "openATV" and build == "0":
-					BuildVersion = " " + "rel" + " " + Date
-				else:									
-					BuildVersion = "  " + Date
-			if os.path.isfile("/tmp/testmount/usr/bin/enigma2"):
-				self.imagelist[self.slot] =  { 'imagename': open("/tmp/testmount/etc/issue").readlines()[-2].capitalize().strip()[:-6].replace("-release", " rel") + BuildVersion}
+					self.imagelist[self.slot] = { 'imagename': _("Empty slot")}
 			else:
-				self.imagelist[self.slot] = { 'imagename': _("Empty slot")}
+				if os.path.isfile("/tmp/testmount/usr/bin/enigma2"):
+					self.imagelist[self.slot] = { 'imagename': getImagename("/tmp/testmount") }
+				else:
+					self.imagelist[self.slot] = { 'imagename': _("Empty slot")}
 			self.phase = self.UNMOUNT
 			self.run()
 		elif self.slot < self.numberofslots:
@@ -87,40 +79,3 @@ class GetImagelist():
 			if not os.path.ismount('/tmp/testmount'):
 				os.rmdir('/tmp/testmount')
 			self.callback(self.imagelist)
-
-class WriteStartup():
-	MOUNT = 0
-	UNMOUNT = 1
-
-	def __init__(self, Contents, callback):
-		if SystemInfo["canMultiBoot"]:
-			if not os.path.isdir('/tmp/testmount'):
-				os.mkdir('/tmp/testmount')
-			self.callback = callback
-			self.container = Console()
-			self.phase = self.MOUNT
-			if not SystemInfo["canMode12"]:
-				self.slot = Contents
-			else:
-				self.contents = Contents			
-			self.run()
-		else:	
-			callback({})
-	
-	def run(self):
-		self.container.ePopen('mount /dev/mmcblk0p1 /tmp/testmount' if self.phase == self.MOUNT else 'umount /tmp/testmount', self.appClosed)
-#	If GigaBlue then Contents = slot, use slot to read STARTUP_slot
-#	If multimode and bootmode 1 or 12, then Contents is STARTUP file, so just write it to STARTUP.			
-	def appClosed(self, data, retval, extra_args):
-		if retval == 0 and self.phase == self.MOUNT:
-			if os.path.isfile("/tmp/testmount/STARTUP"):
-				if 'coherent_poll=2M' in open("/proc/cmdline", "r").read():
-					self.contents = open('/tmp/testmount/STARTUP_%s'% self.slot).read()
-				open('/tmp/testmount/STARTUP', 'w').write(self.contents)
-			self.phase = self.UNMOUNT
-			self.run()
-		else:
-			self.container.killAll()
-			if not os.path.ismount('/tmp/testmount'):
-				os.rmdir('/tmp/testmount')
-			self.callback()

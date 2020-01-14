@@ -145,6 +145,7 @@ is usually caused by not marking PSignals as immutable.
 typedef long time_t;
 %include "typemaps.i"
 %include "std_string.i"
+%include "stdint.i"
 %include <lib/python/swig.h>
 %include <lib/base/object.h>
 %include <lib/base/eenv.h>
@@ -419,6 +420,18 @@ int getLinkedSlotID(int fe)
         eFBCTunerManager *mgr = eFBCTunerManager::getInstance();
         if (mgr) return mgr->getLinkedSlotID(fe);
         return -1;
+}
+%}
+
+PyObject *getFontFaces();
+%{
+PyObject *getFontFaces()
+{
+	std::vector<std::string> v = fontRenderClass::getInstance()->getFontFaces();
+	ePyObject result = PyList_New(v.size());
+	for (size_t i = 0; i < v.size(); i++)
+		PyList_SET_ITEM(result, i, PyString_FromString(v[i].c_str()));
+        return result;
 }
 %}
 

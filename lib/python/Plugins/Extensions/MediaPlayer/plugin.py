@@ -9,7 +9,7 @@ from Screens.InputBox import InputBox
 from Screens.ChoiceBox import ChoiceBox
 from Screens.InfoBar import InfoBar
 from Screens.InfoBarGenerics import InfoBarSeek, InfoBarScreenSaver, InfoBarAudioSelection, InfoBarCueSheetSupport, InfoBarNotifications, InfoBarSubtitleSupport
-from Components.ActionMap import NumberActionMap, HelpableActionMap
+from Components.ActionMap import NumberActionMap, HelpableActionMap, eActionMap
 from Components.Label import Label
 from Components.Pixmap import Pixmap, MultiPixmap
 from Components.FileList import FileList
@@ -53,7 +53,7 @@ class MediaPixmap(Pixmap):
 					noCoverFile = value
 					break
 		if noCoverFile is None:
-			noCoverFile = resolveFilename(SCOPE_CURRENT_SKIN, "skin_default/no_coverArt.png")
+			noCoverFile = resolveFilename(SCOPE_CURRENT_SKIN, "no_coverArt.png")
 		self.noCoverPixmap = LoadPixmap(noCoverFile)
 		return Pixmap.applySkin(self, desktop, screen)
 
@@ -651,12 +651,13 @@ class MediaPlayer(Screen, InfoBarBase, InfoBarScreenSaver, InfoBarSeek, InfoBarA
 			self.changeEntry(0)
 			self.switchToPlayList()
 
-	def applySettings(self):
-		self.savePlaylistOnExit = config.mediaplayer.savePlaylistOnExit.getValue()
-		if config.mediaplayer.repeat.getValue() == True:
-			self["repeat"].setPixmapNum(1)
-		else:
-			self["repeat"].setPixmapNum(0)
+	def applySettings(self, answer=True):
+		if answer is True:
+			self.savePlaylistOnExit = config.mediaplayer.savePlaylistOnExit.getValue()
+			if config.mediaplayer.repeat.getValue() == True:
+				self["repeat"].setPixmapNum(1)
+			else:
+				self["repeat"].setPixmapNum(0)
 
 	def showEventInformation(self):
 		from Screens.EventView import EventViewSimple
@@ -705,7 +706,7 @@ class MediaPlayer(Screen, InfoBarBase, InfoBarScreenSaver, InfoBarSeek, InfoBarA
 				self.playlistIOInternal.addService(ServiceReference(x[0]))
 			self.playlistIOInternal.save(resolveFilename(SCOPE_PLAYLIST) + name)
 
-	def load_playlist(self):
+	def get_playlists(self):
 		listpath = []
 		playlistdir = resolveFilename(SCOPE_PLAYLIST)
 		try:
@@ -715,7 +716,14 @@ class MediaPlayer(Screen, InfoBarBase, InfoBarScreenSaver, InfoBarSeek, InfoBarA
 			print "Error while scanning subdirs ",e
 		if config.mediaplayer.sortPlaylists.value:
 			listpath.sort()
-		self.session.openWithCallback(self.PlaylistSelected, ChoiceBox, title=_("Please select a playlist..."), list = listpath)
+		return listpath
+
+	def load_playlist(self):
+		listpath = self.get_playlists()
+		if listpath:
+			self.session.openWithCallback(self.PlaylistSelected, ChoiceBox, title=_("Please select a playlist..."), list = listpath)
+		else:
+			self.session.open(MessageBox, _("There are no saved playlists to load!"), MessageBox.TYPE_ERROR)
 
 	def PlaylistSelected(self,path):
 		if path is not None:
@@ -730,16 +738,11 @@ class MediaPlayer(Screen, InfoBarBase, InfoBarScreenSaver, InfoBarSeek, InfoBarA
 			self.playlist.updateList()
 
 	def delete_saved_playlist(self):
-		listpath = []
-		playlistdir = resolveFilename(SCOPE_PLAYLIST)
-		try:
-			for i in os.listdir(playlistdir):
-				listpath.append((i,playlistdir + i))
-		except IOError,e:
-			print "Error while scanning subdirs ",e
-		if config.mediaplayer.sortPlaylists.value:
-			listpath.sort()
-		self.session.openWithCallback(self.DeletePlaylistSelected, ChoiceBox, title=_("Please select a playlist to delete..."), list = listpath)
+		listpath = self.get_playlists()
+		if listpath:
+			self.session.openWithCallback(self.DeletePlaylistSelected, ChoiceBox, title=_("Please select a playlist to delete..."), list = listpath)
+		else:
+			self.session.open(MessageBox, _("There are no saved playlists to delete!"), MessageBox.TYPE_ERROR)
 
 	def DeletePlaylistSelected(self,path):
 		if path is not None:
@@ -993,6 +996,14 @@ class MediaPlayer(Screen, InfoBarBase, InfoBarScreenSaver, InfoBarSeek, InfoBarA
 
 	def unPauseService(self):
 		self.setSeekState(self.SEEK_STATE_PLAY)
+
+	def keypressScreenSaver(self, key, flag):
+		if flag:
+			self.screensaver.hide()
+			if self.seekstate == self.SEEK_STATE_PAUSE:
+				self.show()
+			self.ScreenSaverTimerStart()
+			eActionMap.getInstance().unbindAction('', self.keypressScreenSaver)
 
 	def subtitleSelection(self):
 		from Screens.AudioSelection import SubtitleSelection

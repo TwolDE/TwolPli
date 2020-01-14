@@ -22,6 +22,7 @@ class MessageBox(Screen):
 
 		self.msgBoxID = msgBoxID
 
+		self["autoresize"] = Label("") #do not remove, used for autoResize()
 		self["text"] = Label(text)
 		self["Text"] = StaticText(text)
 		self["selectedChoice"] = StaticText()
@@ -121,7 +122,6 @@ class MessageBox(Screen):
 				self.timeoutCallback()
 
 	def timeoutCallback(self):
-		print "Timeout!"
 		if self.timeout_default is not None:
 			self.close(self.timeout_default)
 		else:
@@ -161,3 +161,9 @@ class MessageBox(Screen):
 
 	def __repr__(self):
 		return str(type(self)) + "(" + self.text + ")"
+
+	def getListWidth(self):
+		def getListLineTextWidth(text):
+			self["autoresize"].setText(text)
+			return self["autoresize"].getSize()[0]
+		return max([getListLineTextWidth(line[0]) for line in self.list]) if self.list else 0

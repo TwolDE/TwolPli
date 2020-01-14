@@ -1,7 +1,7 @@
 DESCRIPTION = "Enigma2 is an experimental, but useful framebuffer-based frontend for DVB functions"
 MAINTAINER = "OpenPLi team <info@openpli.org>"
 LICENSE = "GPLv2"
-LIC_FILES_CHKSUM = "file://LICENSE;md5=751419260aa954499f7abaabaa882bbe"
+LIC_FILES_CHKSUM = "file://LICENSE;md5=b234ee4d69f5fce4486a80fdaf4a4263"
 
 inherit gitpkgv externalsrc
 
@@ -48,8 +48,7 @@ sbindir = "/usr/sbin"
 EXTRA_OECONF = "\
 	--enable-maintainer-mode --with-target=native --with-libsdl=no --with-boxtype=${MACHINE} \
 	--enable-dependency-tracking \
-	${@base_contains("MACHINE_FEATURES", "textlcd", "--with-textlcd" , "", d)} \
-	${@base_contains("GST_VERSION", "1.0", "--with-gstversion=1.0", "", d)} \
+	${@bb.utils.contains("MACHINE_FEATURES", "textlcd", "--with-textlcd" , "", d)} \
 	BUILD_SYS=${BUILD_SYS} \
 	HOST_SYS=${HOST_SYS} \
 	STAGING_INCDIR=${STAGING_INCDIR} \

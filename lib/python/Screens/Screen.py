@@ -7,7 +7,7 @@ from Components.Sources.Source import Source
 profile("LOAD:GUIComponent")
 from Components.GUIComponent import GUIComponent
 profile("LOAD:eRCInput")
-from enigma import eRCInput
+from enigma import eRCInput, eTimer
 
 class Screen(dict, GUISkin):
 
@@ -95,7 +95,7 @@ class Screen(dict, GUISkin):
 	def execEnd(self):
 		active_components = self.active_components
 #		for (name, val) in self.items():
-		self.active_components = None
+		self.active_components = []
 		for val in active_components:
 			val.execEnd()
 #		assert self.session is not None, "execEnd on non-execing screen!"
@@ -175,3 +175,8 @@ class Screen(dict, GUISkin):
 			return self.global_screen
 		else:
 			return None
+
+	def callLater(self, function):
+		self.__callLaterTimer = eTimer()
+		self.__callLaterTimer.callback.append(function)
+		self.__callLaterTimer.start(0, True)
