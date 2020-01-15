@@ -459,7 +459,10 @@ class MultibootSelection(SelectImage):
 				self.container.ePopen('mount /dev/block/by-name/boot /tmp/startupmount', self.getImagesList)
 			else:
 				os.mkdir('/tmp/startupmount')
-				self.container.ePopen('mount /dev/%s1 /tmp/startupmount' % SystemInfo["canMultiBoot"][2], self.getImagesList)
+				if SystemInfo["HasHiSi"]:
+					self.container.ePopen('mount /dev/mmcblk0p3 /tmp/startupmount', self.getImagesList)
+				else:
+					self.container.ePopen('mount /dev/%s1 /tmp/startupmount' % SystemInfo["canMultiBoot"][2], self.getImagesList)
 
 	def getImagesList(self, data=None, retval=None, extra_args=None):
 		self.container.killAll()
