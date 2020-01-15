@@ -224,6 +224,8 @@ class FlashImage(Screen):
 		self.getImageList = None
 		choices = []
 		currentimageslot = GetCurrentImage()
+		if SystemInfo["HasHiSi"]:
+			currentimageslot += 1
 		for x in range(1, SystemInfo["canMultiBoot"][1] + 1):
 			choices.append(((_("slot%s - %s (current image) with, backup") if x == currentimageslot else _("slot%s - %s, with backup")) % (x, imagedict[x]['imagename']), (x, "with backup")))
 		for x in range(1, SystemInfo["canMultiBoot"][1] + 1):
@@ -235,6 +237,12 @@ class FlashImage(Screen):
 		if retval:
 			if SystemInfo["canMultiBoot"]:
 				self.multibootslot = retval[0]
+				if SystemInfo["HasHiSi"]:
+					self.HiSiSD = False
+					if "sd" in self.imagelist[retval]['part']:
+						self.MTDKERNEL = "%s%s" %(SystemInfo["canMultiBoot"][2], int(self.imagelist[retval]['part'][3])-1)
+						self.MTDROOTFS = "%s" %(self.imagelist[retval]['part'])
+						self.HiSISD = True
 				doBackup = retval[1] == "with backup"
 			else:
 				doBackup = retval == "with backup"
@@ -364,6 +372,8 @@ class FlashImage(Screen):
 		if imagefiles:
 			if SystemInfo["canMultiBoot"]:
 				command = "/usr/bin/ofgwrite -k -r -m%s '%s'" % (self.multibootslot, imagefiles)
+				if SystemInfo["HasHiSI"] and self.HiSiSD:
+					command = "/usr/bin/ofgwrite -r%s -k%s '%s'" % (self.MTDROOTFS, self.MTDKERNEL, imagefiles)
 			else:
 				command = "/usr/bin/ofgwrite -k -r '%s'" % imagefiles
 			self.containerofgwrite = Console()
@@ -449,7 +459,7 @@ class MultibootSelection(SelectImage):
 				self.container.ePopen('mount /dev/block/by-name/boot /tmp/startupmount', self.getImagesList)
 			else:
 				os.mkdir('/tmp/startupmount')
-				self.container.ePopen('mount /dev/%sp1 /tmp/startupmount' % SystemInfo["canMultiBoot"][2], self.getImagesList)
+				self.container.ePopen('mount /dev/%s1 /tmp/startupmount' % SystemInfo["canMultiBoot"][2], self.getImagesList)
 
 	def getImagesList(self, data=None, retval=None, extra_args=None):
 		self.container.killAll()
@@ -459,6 +469,9 @@ class MultibootSelection(SelectImage):
 		list = []
 		currentimageslot = GetCurrentImage()
 		mode = GetCurrentImageMode() or 0
+		if SystemInfo["HasHiSi"]:
+			currentimageslot += 1			#allow for mmc as 1st slot, then SDCard slots
+			print "[MultiBoot Restart] reboot2 slot:\n", currentimageslot 
 		if imagesdict:
 			for index, x in enumerate(sorted(imagesdict.keys())):
 				if imagesdict[x]["imagename"] != _("Empty slot"):
