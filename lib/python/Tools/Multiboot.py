@@ -58,7 +58,7 @@ class GetImagelist():
 				self.imagelist[self.slot2] = { 'imagename': _("Empty slot"), 'part': '%s' %self.part2 }
 		else:
 			if self.SDmmc == self.LastRun:
-				self.part2 = getMachineMtdRoot()	# process mmc slot
+				self.part2 = "mmcblk0p13"	# process sf8008 mmc slot
 				self.slot2 = 1
 			else:
 				self.part2 = "%s" %(self.part + str(self.slot * 2 + self.firstslot))
@@ -89,7 +89,7 @@ class GetImagelist():
 			else:
 				if os.path.isfile("/tmp/testmount/usr/bin/enigma2"):
 					self.OsPath = '/tmp/testmount'
-					self.imagelist[self.slot2] = { 'imagename': getImagename("%s" %self.OsPath), 'part': '%s' %self.part2  }
+					self.imagelist[self.slot2] = { 'imagename': getImagename("%s" %self.OsPath), 'part': '%s' %self.part2}
 			self.phase = self.UNMOUNT
 			self.run()
 		elif self.slot < self.numberofslots:

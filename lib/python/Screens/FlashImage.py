@@ -224,11 +224,12 @@ class FlashImage(Screen):
 		self.getImageList = None
 		choices = []
 		currentimageslot = GetCurrentImage()
+		HIslot = len(imagedict) + 1
 		if SystemInfo["HasHiSi"]:
 			currentimageslot += 1
-		for x in range(1, SystemInfo["canMultiBoot"][1] + 1):
+		for x in range(1, HIslot):
 			choices.append(((_("slot%s - %s (current image) with, backup") if x == currentimageslot else _("slot%s - %s, with backup")) % (x, imagedict[x]['imagename']), (x, "with backup")))
-		for x in range(1, SystemInfo["canMultiBoot"][1] + 1):
+		for x in range(1, Hislot):
 			choices.append(((_("slot%s - %s (current image), without backup") if x == currentimageslot else _("slot%s - %s, without backup")) % (x, imagedict[x]['imagename']), (x, "without backup")))
 		choices.append((_("No, do not flash image"), False))
 		self.session.openWithCallback(self.checkMedia, MessageBox, self.message, list=choices, default=currentimageslot, simple=True)

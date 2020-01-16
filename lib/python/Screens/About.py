@@ -12,7 +12,7 @@ from Components.SystemInfo import SystemInfo
 
 from Components.Label import Label
 from Components.ProgressBar import ProgressBar
-
+from Tools.Multiboot import GetCurrentImage, GetCurrentImageMode
 from Tools.StbHardware import getFPVersion
 from enigma import eTimer, eLabel, eConsoleAppContainer, getDesktop, eGetEnigmaDebugLvl
 
@@ -30,10 +30,21 @@ class About(Screen):
 		AboutText += _("CPU: ") + cpu + "\n"
 		AboutText += _("Image: ") + about.getImageTypeString() + "\n"
 		if SystemInfo["canMultiBoot"]:
+			slot = image = GetCurrentImage()
+			part = "eMMC slot %s" %slot
 			bootmode = ""
 			if SystemInfo["canMode12"]:
 				bootmode = " bootmode = %s" %GetCurrentImageMode()
 			AboutText += _("STARTUP slot: ") + str(GetCurrentImage()) + bootmode + "\n"
+			if SystemInfo["HasHiSi"]:
+				slot += 1
+				if image != 0:
+					part = "SDC slot %s (%s%s) " %(image, SystemInfo["canMultiBoot"][2], image*2)
+				else:
+					part = "eMMC slot %s" %slot
+			AboutText += _("Image Slot:\t%s") % "STARTUP_" + str(slot) + "  " + part + " " + bootmode + "\n"
+
+
 		AboutText += _("Build date: ") + about.getBuildDateString() + "\n"
 		AboutText += _("Last update: ") + about.getUpdateDateString() + "\n"
 
