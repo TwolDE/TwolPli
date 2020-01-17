@@ -29,6 +29,11 @@ QUIT_IMAGE_RESTORE = 43
 
 class Standby(Screen):
 	def Power(self):
+		if SystemInfo["HasHiSi"]:
+			try:
+				open("/proc/stb/hdmi/output", "w").write("on")
+			except:
+				pass
 		print "[Standby] leave standby"
 		self.close(True)
 
@@ -101,18 +106,11 @@ class Standby(Screen):
 			self.avswitch.setInput("SCART")
 		else:
 			self.avswitch.setInput("AUX")
-
-		gotoShutdownTime = int(config.usage.standby_to_shutdown_timer.value)
-		if gotoShutdownTime:
-			self.standbyTimeoutTimer.startLongTimer(gotoShutdownTime)
-
-		gotoWakeupTime = isNextWakeupTime(True)
-		if gotoWakeupTime != -1:
-			curtime = localtime(time())
-			if curtime.tm_year > 1970:
-				wakeup_time = int(gotoWakeupTime - time())
-				if wakeup_time > 0:
-					self.standbyWakeupTimer.startLongTimer(wakeup_time)
+		if SystemInfo["HasHiSi"]:
+			try:
+				open("/proc/stb/hdmi/output", "w").write("off")
+			except:
+				pass
 
 		self.onFirstExecBegin.append(self.__onFirstExecBegin)
 		self.onClose.append(self.__onClose)
