@@ -11,7 +11,7 @@ fi
 
 # any debuglevel passed?
 if [ -z $ENIGMA_DEBUG_LVL ]; then
-	DEBUG_LVL=3
+	DEBUG_LVL=4
 else
 	DEBUG_LVL=$ENIGMA_DEBUG_LVL
 fi
