@@ -221,6 +221,7 @@ class FlashImage(Screen):
 			self.session.openWithCallback(self.checkMedia, MessageBox, self.message , list=choices, default=False, simple=True)
 
 	def getImagelistCallback(self, imagedict):
+		self.imagelist = imagedict
 		self.getImageList = None
 		choices = []
 		currentimageslot = GetCurrentImage()
@@ -229,7 +230,7 @@ class FlashImage(Screen):
 			currentimageslot += 1
 		for x in range(1, HIslot):
 			choices.append(((_("slot%s - %s (current image) with, backup") if x == currentimageslot else _("slot%s - %s, with backup")) % (x, imagedict[x]['imagename']), (x, "with backup")))
-		for x in range(1, Hislot):
+		for x in range(1, HIslot):
 			choices.append(((_("slot%s - %s (current image), without backup") if x == currentimageslot else _("slot%s - %s, without backup")) % (x, imagedict[x]['imagename']), (x, "without backup")))
 		choices.append((_("No, do not flash image"), False))
 		self.session.openWithCallback(self.checkMedia, MessageBox, self.message, list=choices, default=currentimageslot, simple=True)
@@ -239,11 +240,10 @@ class FlashImage(Screen):
 			if SystemInfo["canMultiBoot"]:
 				self.multibootslot = retval[0]
 				if SystemInfo["HasHiSi"]:
-					self.HiSiSD = False
-					if "sd" in self.imagelist[retval]['part']:
-						self.MTDKERNEL = "%s%s" %(SystemInfo["canMultiBoot"][2], int(self.imagelist[retval]['part'][3])-1)
-						self.MTDROOTFS = "%s" %(self.imagelist[retval]['part'])
-						self.HiSISD = True
+					self.MTDKERNEL = False
+					if "sd" in self.imagelist[self.multibootslot]['part']:
+						self.MTDKERNEL = "%s%s" %(SystemInfo["canMultiBoot"][2], int(self.imagelist[self.multibootslot]['part'][3])-1)
+						self.MTDROOTFS = "%s" %(self.imagelist[self.multibootslot]['part'])
 				doBackup = retval[1] == "with backup"
 			else:
 				doBackup = retval == "with backup"
@@ -357,11 +357,12 @@ class FlashImage(Screen):
 		self.callLater(self.doUnzip)
 
 	def doUnzip(self):
-		try:
-			zipfile.ZipFile(self.zippedimage, 'r').extractall(self.unzippedimage)
-			self.flashimage()
-		except:
-			self.session.openWithCallback(self.abort, MessageBox, _("Error during unzipping image\n%s") % self.imagename, type=MessageBox.TYPE_ERROR, simple=True)
+#		try:
+		print "[FlashImage] zipped = %s unzipped = %s" %(self.zippedimage, self.unzippedimage)
+		zipfile.ZipFile(self.zippedimage, 'r').extractall(self.unzippedimage)
+		self.flashimage()
+#		except:
+#			self.session.openWithCallback(self.abort, MessageBox, _("Error during unzipping image\n%s") % self.imagename, type=MessageBox.TYPE_ERROR, simple=True)
 
 	def flashimage(self):
 		self["header"].setText(_("Flashing Image"))
@@ -373,7 +374,7 @@ class FlashImage(Screen):
 		if imagefiles:
 			if SystemInfo["canMultiBoot"]:
 				command = "/usr/bin/ofgwrite -k -r -m%s '%s'" % (self.multibootslot, imagefiles)
-				if SystemInfo["HasHiSI"] and self.HiSiSD:
+				if SystemInfo["HasHiSi"] and self.MTDKERNEL:
 					command = "/usr/bin/ofgwrite -r%s -k%s '%s'" % (self.MTDROOTFS, self.MTDKERNEL, imagefiles)
 			else:
 				command = "/usr/bin/ofgwrite -k -r '%s'" % imagefiles
