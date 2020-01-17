@@ -613,6 +613,9 @@ class HarddiskManager:
 		is_cdrom = False
 		is_mmc = False
 		partitions = []
+		BLACKLIST=[]
+		if SystemInfo["HasHiSi"]:			# sf8008
+			BLACKLIST=["sda2", "sda3", "sda4", "mmcblk0", "mmcblk0p3"]
 		try:
 			if os.path.exists(devpath + "/removable"):
 				removable = bool(int(readFile(devpath + "/removable")))
@@ -656,7 +659,9 @@ class HarddiskManager:
 		except IOError, err:
 			if err.errno == 159: # no medium present
 				medium_found = False
-
+		if blockdev[:3] in BLACKLIST or blockdev[:7] in BLACKLIST or blockdev in BLACKLIST:
+				blacklisted = True
+		print "[Harddisk] blockdev = %s, BLACKLIST = %s, blacklisted = %s" %(blockdev, BLACKLIST, blacklisted)
 		return error, blacklisted, removable, is_cdrom, partitions, medium_found
 
 	def enumerateBlockDevices(self):
