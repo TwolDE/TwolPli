@@ -6,7 +6,8 @@ install_PYTHON =	\
 	__init__.py \
 	plugin.py \
 	BackupRestore.py \
-	SoftwareTools.py
+	SoftwareTools.py \
+	H9SDmanager.py
 
 dist_install_DATA = \
 	installable.png \

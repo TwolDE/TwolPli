@@ -103,6 +103,7 @@ SystemInfo["hasXcoreVFD"] = model in ('osmega','spycat4k','spycat4kmini','spycat
 SystemInfo["HasOfflineDecoding"] = model not in ('osmini', 'osminiplus', 'et7000mini', 'et11000', 'mbmicro', 'mbtwinplus', 'mbmicrov2', 'et7000', 'et8500')
 SystemInfo["HasRootSubdir"] = "rootsubdir" in cmdline
 SystemInfo["HasHiSi"] = pathExists('/proc/hisi')
+SystemInfo["HasH9SD"] = model in ("h9", "i55plus") and pathExists("/dev/mmcblk0p1")
 SystemInfo["canMultiBoot"] = SystemInfo["HasHiSi"] and fileCheck("/dev/sda") and (0, 2, 'sda', True) or SystemInfo["HasRootSubdir"] and (1, 4, "mmcblk0p", False) or "%s_4.boxmode" % model in cmdline and (1, 4, "mmcblk0p", False) or model in ('gbue4k', 'gbquad4k') and (3, 3, "mmcblk0p", True) or model in ('e4hd') and (1, 4, "mmcblk0p", False) or model in ('osmio4k', 'osmio4kplus', 'osmini4k') and (1, 4, "mmcblk1p", True)
 SystemInfo["canMode12"] = "%s_4.boxmode" % model in cmdline and cmdline["%s_4.boxmode" % model] in ("1","12") and "192M"
 SystemInfo["canFlashWithOfgwrite"] = not(model.startswith("dm"))

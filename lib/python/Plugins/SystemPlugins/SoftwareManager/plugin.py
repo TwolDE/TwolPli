@@ -35,6 +35,7 @@ from enigma import RT_HALIGN_LEFT, RT_VALIGN_CENTER, eListbox, gFont, getDesktop
 from twisted.web import client
 from BackupRestore import BackupSelection, RestoreMenu, BackupScreen, RestoreScreen, getBackupPath, getBackupFilename
 from SoftwareTools import iSoftwareTools
+from H9SDmanager import H9SDmanager
 
 config.plugins.configurationbackup = ConfigSubsection()
 config.plugins.configurationbackup.backuplocation = ConfigText(default = '/media/hdd/', visible_width = 50, fixed_size = False)
@@ -122,6 +123,8 @@ class UpdatePluginMenu(Screen):
 			self.list.append(("system-backup", _("Backup system settings"), _("Backup your receiver settings.") + self.oktext + "\n\n" + self.infotext, None))
 			self.list.append(("system-restore",_("Restore system settings"), _("Restore your receiver settings.") + self.oktext, None))
 			self.list.append(("ipkg-install", _("Install local extension"), _("Scan for local extensions and install them.") + self.oktext, None))
+			if SystemInfo["HasH9SD"]:
+				self.list.append(("H9SDmanager", _("H9 SDcard manager"), _("H9/i55 move root to SD card") + self.oktext, None))
 			for p in plugins.getPlugins(PluginDescriptor.WHERE_SOFTWAREMANAGER):
 				if "SoftwareSupported" in p.__call__:
 					callFnc = p.__call__["SoftwareSupported"](None)
@@ -250,6 +253,8 @@ class UpdatePluginMenu(Screen):
 					self.session.open(PluginManager, self.skin_path)
 				elif (currentEntry == "system-backup"):
 					self.session.openWithCallback(self.backupDone,BackupScreen, runBackup = True)
+				elif currentEntry == "H9SDmanager":
+						self.session.open(H9SDmanager)
 				elif (currentEntry == "system-restore"):
 					if os.path.exists(self.fullbackupfilename):
 						self.session.openWithCallback(self.startRestore, MessageBox, _("Are you sure you want to restore the backup?\nYour receiver will restart after the backup has been restored!"))
