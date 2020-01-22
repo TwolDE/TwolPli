@@ -29,6 +29,14 @@ class About(Screen):
 		cpu = about.getCPUInfoString()
 		AboutText += _("CPU: ") + cpu + "\n"
 		AboutText += _("Image: ") + about.getImageTypeString() + "\n"
+
+		if SystemInfo["HasH9SD"]:
+			if "rootfstype=ext4" in open('/sys/firmware/devicetree/base/chosen/bootargs', 'r').read():
+				part = "        - SD card in use for Image root \n" 
+			else:
+				part = "        - eMMC slot in use for Image root \n"
+			AboutText += _("%s") % part
+
 		if SystemInfo["canMultiBoot"]:
 			slot = image = GetCurrentImage()
 			part = "eMMC slot %s" %slot
